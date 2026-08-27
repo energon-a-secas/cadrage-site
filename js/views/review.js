@@ -185,7 +185,7 @@ function ruleErrors(result) {
   if (!result.errors.length) return '';
   return panel({
     title: 'Rules that failed to run',
-    lead: 'These are bugs in Rigcheck, not in your setup. They are shown rather than swallowed, because a silent rule is indistinguishable from a passing one.',
+    lead: 'These are bugs in Cadrage, not in your setup. They are shown rather than swallowed, because a silent rule is indistinguishable from a passing one.',
     body: `<ul class="rule-errors">${result.errors.map(e => `
       <li><code>${escHtml(e.rule.id)}</code> threw during <code>${escHtml(e.phase)}</code>: ${escHtml(e.message)}</li>`).join('')}</ul>`,
   });

@@ -22,4 +22,4 @@ Allow: /
 User-agent: anthropic-ai
 Allow: /
 
-Sitemap: https://rigcheck.neorgon.com/sitemap.xml
+Sitemap: https://cadrage.neorgon.com/sitemap.xml

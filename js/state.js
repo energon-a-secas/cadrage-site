@@ -7,11 +7,11 @@ import { blank, loadPreset, fromPartial, CONFIG_VERSION } from './data/presets.j
 import { defaultEnabled } from './data/basis.js';
 
 const KEYS = {
-  configs: 'rigcheck-configs',
-  active: 'rigcheck-active',
-  prefs: 'rigcheck-prefs',
-  progress: 'rigcheck-progress',
-  rules: 'rigcheck-rules-enabled',
+  configs: 'cadrage-configs',
+  active: 'cadrage-active',
+  prefs: 'cadrage-prefs',
+  progress: 'cadrage-progress',
+  rules: 'cadrage-rules-enabled',
 };
 
 export const state = {

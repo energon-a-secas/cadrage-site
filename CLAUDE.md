@@ -1,8 +1,8 @@
-# CLAUDE.md: Rigcheck
+# CLAUDE.md: Cadrage
 
-Rigcheck: review camera settings to find the ones that contradict each other, do nothing, or get corrected twice in post (rigcheck.neorgon.com)
+Cadrage: review camera settings to find the ones that contradict each other, do nothing, or get corrected twice in post (cadrage.neorgon.com)
 
-**Live:** rigcheck.neorgon.com · **Port:** 8860
+**Live:** cadrage.neorgon.com · **Port:** 8860
 
 ## Run
 

@@ -102,7 +102,7 @@ function syncNav(section) {
 function setSubtitle(section) {
   const el = document.querySelector('.header-subtitle');
   if (el) el.textContent = SUBTITLES[section] || SUBTITLES.review;
-  document.title = `Rigcheck | ${TITLES[section] || TITLES.review}`;
+  document.title = `Cadrage | ${TITLES[section] || TITLES.review}`;
 }
 
 /** Build the nav rail once, from the route list. */

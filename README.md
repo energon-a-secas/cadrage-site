@@ -1,6 +1,6 @@
 <div align="center">
 
-# Rigcheck
+# Cadrage
 
 Review camera settings to find the ones that contradict each other, do nothing, or get corrected twice in post
 
@@ -18,7 +18,7 @@ Review camera settings to find the ones that contradict each other, do nothing, 
 [badge-claude]:  https://img.shields.io/badge/Claude_Code-CC785C?style=for-the-badge&logo=anthropic&logoColor=white
 [badge-license]: https://img.shields.io/badge/license-MIT-404040?style=for-the-badge
 
-[url-site]:   https://rigcheck.neorgon.com/
+[url-site]:   https://cadrage.neorgon.com/
 [url-html]:   #
 [url-css]:    #
 [url-js]:     #
@@ -33,7 +33,7 @@ Review camera settings to find the ones that contradict each other, do nothing, 
 [2-3 sentences: what the tool does, who it helps, what makes it different.
 Lead with what the user gets. Use active verbs.]
 
-**Live:** rigcheck.neorgon.com
+**Live:** cadrage.neorgon.com
 
 ---
 
@@ -64,7 +64,7 @@ python3 -m http.server 8000
 ## Architecture
 
 ```
-rigcheck-site/
+cadrage-site/
 ├── index.html          # HTML shell
 ├── css/
 │   └── style.css       # All styles

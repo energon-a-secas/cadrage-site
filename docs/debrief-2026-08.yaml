@@ -1,0 +1,166 @@
+presentation:
+  title: "Cadrage, reworked"
+  subtitle: "From settings linter to camera school"
+  date: "2026-08"
+  footer: "Cadrage · cadrage.neorgon.com"
+  audience: mixed
+  outcome: approve
+  duration: 20
+  big_idea: "Cadrage now teaches the camera it checks, and every claim still names its source."
+
+  slides:
+    - type: title
+      heading: "Cadrage, reworked"
+      subtitle: "From settings linter to camera school · August 2026"
+      note: "Formerly Rigcheck. Four commits: rename, lessons, the rework (0c83f50), the nav pass (6b7733b). 38 files, +4,058 / -413."
+
+    - type: bullets
+      heading: "The site did not match its owner's view"
+      bullets:
+        - "Three routes shipped saying Not built yet"
+        - "26 review rules cited 13 missing lessons"
+        - "Camera view covered a movie-mode subset"
+        - "Nav ordered around the tool, not the learning"
+      note: "Old routes: review, menu, learn, post, profiles, tools. learn/post/profiles were placeholder views in render.js. findingCard already linked #/learn/<id>; every link 404'd in spirit."
+
+    - type: quote
+      text: "Replicate the UI from the Sony a6700 to assist the full walkthrough of the camera menu."
+      source: "The brief, spelling normalised"
+
+    - type: agenda
+      auto: true
+
+    - type: divider
+      heading: "Learn"
+      subtitle: "Basics before advanced, six tracks"
+
+    - type: bullets
+      heading: "Every claim in the curriculum names its source"
+      bullets:
+        - "24 lessons, six tracks, three levels"
+        - "Exposure triangle and focus, basics to advanced"
+        - "Colour, light, format built from the rules' data"
+        - "Each lesson links camera rows and calculators"
+        - "Every rule's Read-why now lands somewhere"
+      note: "js/data/lessons/: exposure (7), focus (7), colour (5), light (2), format-post (3). Drafted partly by agents from rules.js/gammas.js detail text, fact-checked against the repo, then integrated by hand."
+
+    - type: image
+      heading: "The Learn index"
+      src: "./debrief-2026-08-img/learn.png"
+      alt: "Learn index with track sections and level chips"
+      caption: "Tracks in learning order; read state is a local checkmark"
+      fit: contain
+
+    - type: divider
+      heading: "Walkthrough"
+      subtitle: "The camera, in dependency order"
+
+    - type: split
+      heading: "Video writes, photo teaches"
+      left:
+        heading: "Video, 13 steps"
+        bullets:
+          - "Format, exposure, colour, focus, check"
+          - "Apply writes into the live setup"
+          - "Flicker-clean shutter computed per config"
+      right:
+        heading: "Photo, 11 steps"
+        bullets:
+          - "Points at rows and explains"
+          - "Never writes: the setup models video"
+          - "Same lessons, same camera rows"
+      note: "The asymmetry is deliberate honesty: stills fields do not exist in blank(), so photo steps pretending to write would drift from reality. Tested: photo steps with a non-empty set[] fail content.test.mjs."
+
+    - type: image
+      heading: "The video pass"
+      src: "./debrief-2026-08-img/walkthrough.png"
+      alt: "Video walkthrough with phased steps and apply buttons"
+      caption: "Each step: why, where on the camera, and Apply"
+      fit: contain
+
+    - type: divider
+      heading: "The camera"
+      subtitle: "The a6700 menu, transcribed"
+
+    - type: bullets
+      heading: "The replica comes from the help guide, not memory"
+      bullets:
+        - "10-agent research pass over the official guide"
+        - "8 tabs, 280 rows, verified screen layout"
+        - "Main is a tile grid, as the body draws it"
+        - "Arrows move, Enter descends, Escape is MENU"
+        - "Live rows edit the setup; the rest say so"
+      note: "helpguide.sony.net/ilc/2320/v1/en, read 2026-08-28. Transcription agents wrote per-tab JSON; a coverage verifier checked the rows the site already modelled before anything was generated. Tab accent colours are approximated: the guide's art is grayscale."
+
+    - type: image
+      heading: "Movie Main"
+      src: "./debrief-2026-08-img/camera-main.png"
+      alt: "The replica's Main tile screen with live values and finding flags"
+      caption: "Live values, finding flags, and the detail card with its lesson links"
+      fit: contain
+
+    - type: bullets
+      heading: "The transcription judged the site itself"
+      bullets:
+        - "Embed LUT File: not on this body. Was Sony spec"
+        - "Rule downgraded to unverified, ships off"
+        - "Shutter Speed exists only as a Main tile"
+        - "Var. Shutter nests inside Anti-flicker Set."
+      note: "FX-line documentation had leaked into the model. The fix follows the site's own ethos: the rule stays, labelled unverified, listed with the deliberate omissions; the config keeps colour.embedLut for old notes. Also gone: the Exposure Ctrl Type row my own draft lesson had claimed."
+
+    - type: bullets
+      heading: "Nav in the headbar: reviewed, and rejected"
+      bullets:
+        - "Header actions collapse into the mobile overflow"
+        - "Three of five sections would hide behind a tap"
+        - "Rail became the headbar's second row instead"
+        - "Fixed: rail slid under the bar on scroll"
+        - "Fixed: patches wrote to a detached node"
+      note: "The kit README's own pattern for app-mode sites is a docked strip that rises when the bar auto-hides (.header-hidden ~ sibling). The patchDerived bug: utils.$ caches elements forever; the derived zone is replaced by every full render, so patches landed in a detached node. Latent since the original build."
+
+    - type: stats
+      heading: "Held by tests, not by memory"
+      background: ocean
+      stats:
+        - value: "1,143"
+          label: "Content assertions, all green"
+        - value: "280"
+          label: "Menu rows transcribed"
+        - value: "24"
+          label: "Lessons across six tracks"
+        - value: "+4,058"
+          label: "Lines over 38 files"
+      note: "tests/content.test.mjs holds the contracts: every learn, menu, ref, link, lesson and set[].path reference must resolve. Engine suite unchanged at 106. Line count from the collector over 7db5196..HEAD; no vendored or generated files in the diff."
+
+    - type: bullets
+      heading: "What it cost"
+      bullets:
+        - "Two data layers to keep aligned: tree and registry"
+        - "Tab colours approximated; guide art is grayscale"
+        - "Engine still models video only"
+        - "rules.js stays past the 500-line guideline"
+      note: "Tree rows go live via ref into js/data/menu.js; the content test catches dangling refs, but a new row still needs a human to decide which layer owns it. Splitting rules.js is queued for whoever touches it next."
+
+    - type: checklist
+      heading: "Still open"
+      items:
+        - label: "Publish: repo, Pages, DNS"
+          state: todo
+          note: "docs/operations/publishing.md, end to end"
+        - label: "OG image and hub card"
+          state: todo
+          note: "Hub card stays Soon until the site serves"
+        - label: "Registry description update"
+          state: todo
+          note: "Source script has other sessions' pending edits"
+        - label: "Fn menu defaults"
+          state: blocked
+          note: "Sony documents no factory defaults; needs a real body"
+        - label: "Stills in the setup object"
+          state: todo
+          note: "Deferred by design; photo track teaches without it"
+
+    - type: cta
+      heading: "One word ships it"
+      action: "Say publish, and the runbook runs"
+      subtext: "Repo, Pages, DNS, hub card: docs/operations/publishing.md"

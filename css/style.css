@@ -1098,112 +1098,9 @@ button:active,
   .light-row { grid-template-columns: 1fr; }
 }
 
-/* ── Camera menu ─────────────────────────────────────────── */
-/* The A6700 tree: tab rows, group rows, then one row per menu item with
-   its current value, its state chip, and any finding pinned to it. */
-.mtab {
-  background: var(--surface-1);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  overflow: hidden;
-}
-.mtab + .mtab, .mtab + .panel { margin-top: var(--space-4); }
-.mtab > summary {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-5);
-  cursor: pointer;
-  font-weight: 700;
-  font-size: var(--text-base);
-  letter-spacing: 0.01em;
-  list-style: none;
-  border-bottom: 1px solid var(--border-subtle);
-}
-.mtab > summary::-webkit-details-marker { display: none; }
-.mtab > summary::before {
-  content: '';
-  width: 8px; height: 8px;
-  border-right: 2px solid var(--accent);
-  border-bottom: 2px solid var(--accent);
-  transform: rotate(-45deg);
-  transition: transform 120ms ease;
-}
-.mtab[open] > summary::before { transform: rotate(45deg); }
-.mtab__count {
-  margin-left: auto;
-  font-size: var(--text-xs);
-  font-weight: 700;
-  background: rgba(225,29,72,.18);
-  color: #fda4af;
-  border-radius: 999px;
-  padding: 1px var(--space-3);
-}
-.mtab__body { padding: var(--space-2) 0 var(--space-3); }
-
-.mgroup > summary {
-  padding: var(--space-2) var(--space-5) var(--space-2) calc(var(--space-5) + 16px);
-  cursor: pointer;
-  font-size: var(--text-xs);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--accent-2, #22d3ee);
-  list-style: none;
-}
-.mgroup > summary::-webkit-details-marker { display: none; }
-.mgroup > summary::before { content: '▾ '; color: var(--text-muted); }
-.mgroup:not([open]) > summary::before { content: '▸ '; }
-
-.mitems { display: flex; flex-direction: column; }
-.mitem {
-  padding: var(--space-2) var(--space-5) var(--space-2) calc(var(--space-5) + 32px);
-  border-left: 3px solid transparent;
-}
-.mitem + .mitem { border-top: 1px solid var(--border-subtle); }
-.mitem[data-flag="error"] { border-left-color: #e11d48; }
-.mitem[data-flag="warn"] { border-left-color: #fb923c; }
-.mitem[data-flag="note"] { border-left-color: #38bdf8; }
-.mitem[data-flag="inert"] { border-left-color: #64748b; }
-
-.mitem__main {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  flex-wrap: wrap;
-}
-.mitem__text {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-3);
-  flex: 1 1 260px;
-  min-width: 0;
-}
-.mitem__label { font-weight: 600; font-size: var(--text-sm); }
-.mitem__value { font-size: var(--text-sm); color: var(--text-muted); font-variant-numeric: tabular-nums; }
-.mitem__controls {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  flex-wrap: wrap;
-}
-.mitem__sel, .mitem__num { width: auto; min-width: 0; padding: var(--space-1) var(--space-2); font-size: var(--text-sm); }
-.mitem__num { width: 90px; }
-.mitem__check { width: 18px; height: 18px; accent-color: var(--accent); }
-.mitem__note {
-  margin-top: var(--space-1);
-  font-size: var(--text-xs);
-  color: var(--text-muted);
-  line-height: 1.5;
-  max-width: 72ch;
-}
-
-.mitem__flags {
-  margin-top: var(--space-2);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-}
+/* ── Camera menu (replica) ────────────────────────────────── */
+/* The replica's own layout lives in css/camera.css. Only the finding
+   flag rows are shared here, because the review renders them too. */
 .mflag {
   display: flex;
   align-items: center;
@@ -1213,23 +1110,6 @@ button:active,
   padding: var(--space-1) 0;
 }
 .mflag__title { color: var(--text-secondary); font-weight: 600; }
-
-.mrest { display: flex; flex-direction: column; gap: var(--space-2); margin-bottom: var(--space-3); }
-.mrest li { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; font-size: var(--text-sm); }
-.mrest__title { color: var(--text-secondary); font-weight: 600; }
-
-@media (max-width: 700px) {
-  .mtab > summary { padding: var(--space-3) var(--space-4); }
-  .mgroup > summary { padding-left: calc(var(--space-4) + 16px); }
-  .mitem { padding-left: calc(var(--space-4) + 24px); padding-right: var(--space-4); }
-  .mitem__main { align-items: flex-start; flex-direction: column; }
-  /* The desktop flex-basis is a width; in the column direction it would
-     become a height and open a gap between the label and the control. */
-  .mitem__text { flex: 0 1 auto; }
-  .mitem__controls { width: 100%; }
-  .mitem__num { flex: 1 1 80px; width: auto; }
-  .mitem__sel { flex: 1 1 100%; }
-}
 
 /* ── Calculators ── */
 .calc-back { margin: 0 0 var(--space-3); }

@@ -7,6 +7,7 @@ PORT = 8860
 help:
 	@echo ""
 	@echo "  make serve    Start dev server → http://localhost:$(PORT)"
+	@echo "  make test     Run the engine and content tests"
 	@echo "  make kill     Kill this project's HTTP server"
 	@echo ""
 
@@ -15,6 +16,11 @@ help:
 serve:
 	@echo "Serving → http://localhost:$(PORT)"
 	@if [ -f ../../scripts/serve.py ]; then python3 ../../scripts/serve.py $(PORT); else python3 -m http.server $(PORT); fi
+
+# ── Tests ─────────────────────────────────────────────────────────────────────
+.PHONY: test
+test:
+	@node tests/engine.test.mjs && node tests/content.test.mjs
 
 # ── Kill ──────────────────────────────────────────────────────────────────────
 .PHONY: kill

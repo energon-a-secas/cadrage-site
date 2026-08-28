@@ -1,6 +1,6 @@
 # CLAUDE.md: Cadrage
 
-Cadrage: review camera settings to find the ones that contradict each other, do nothing, or get corrected twice in post (cadrage.neorgon.com)
+Cadrage: learn the camera, walk through a setup, and review it for the settings that contradict each other, do nothing, or get corrected twice in post (cadrage.neorgon.com)
 
 **Live:** cadrage.neorgon.com · **Port:** 8860
 
@@ -10,49 +10,55 @@ Cadrage: review camera settings to find the ones that contradict each other, do 
 make serve
 ```
 
-Then open http://localhost:8860. It must be served over HTTP. The app is ES modules, and `file://` blocks them.
+Then open http://localhost:8860. It must be served over HTTP. The app is ES modules, and `file://` blocks them. `make serve` uses the monorepo's `scripts/serve.py` (no-cache) when available; the plain fallback caches stale modules after edits.
+
+```bash
+make test    # tests/engine.test.mjs + tests/content.test.mjs
+```
+
+## Sections
+
+Five routes, built around one setup object: **Learn** (24 lessons, basics to advanced, six tracks) · **Walkthrough** (ordered video and photo passes; video steps can write into the setup) · **Camera** (the a6700 menu replica, 280 rows) · **Review** (the 26-rule lint) · **Calculators**. Old routes `menu`, `post`, `profiles` are aliases.
 
 ## Architecture
 
-| Module | Lines | Owns |
-|---|---:|---|
-| `js/engine/rules.js` | 571 | `AREAS`, `SEVERITY`, `RULES`, `RULE_BY_ID` |
-| `js/data/menu.js` | 429 | `MENU`, `MENU_ITEMS`, `itemsForRule` |
-| `js/views/tools.js` | 331 | `setToolValue`, `patchToolOutputs`, `renderTools` |
-| `js/engine/interactions.js` | 307 | `STATES`, `SETTINGS`, `interactions`, `lensLabel` |
-| `js/views/review.js` | 251 | `renderReview`, `reviewResults` |
-| `js/views/quick-edit.js` | 249 | `quickEditPanel` |
-| `js/engine/calc.js` | 248 | `SHUTTER_STEPS`, `nearestShutterStep`, `isSelectableStep`, `flicker`, `shutterStopsFromIdeal` |
-| `js/data/presets.js` | 228 | `CONFIG_VERSION`, `blank`, `fromPartial`, `PRESETS`, `PRESET_BY_ID` |
-| `js/events.js` | 218 | `openModal`, `closeModal`, `bindEvents` |
-| `js/data/gammas.js` | 178 | `GAMMAS`, `PICTURE_PROFILES`, `LOG_MODES`, `COLOR_GAMUTS`, `PP_RANGES` |
-| `js/state.js` | 174 | `state`, `load`, `saveConfigs`, `saveActive`, `savePrefs` |
-| `js/utils.js` | 161 | `$`, `escHtml`, `showToast`, `debounce`, `renderMarkdown` |
-| `js/views/menu.js` | 154 | `renderMenu`, `menuDerived` |
-| `js/engine/lint.js` | 134 | `lint`, `unverifiedSkips`, `applyFix` |
-| `js/ui.js` | 132 | `basisChip`, `severityPill`, `chip`, `panel`, `kvRows` |
-| `js/data/bodies.js` | 119 | `FORMATS`, `CHROMA_LABELS`, `NTSC_ONLY_FPS`, `ACTUAL_FPS`, `BODIES` |
-| `js/render.js` | 117 | `render`, `patchDerived`, `buildNav` |
-| `js/data/lenses.js` | 76 | `LENSES`, `LENS_IDS`, `equivalentFocal` |
-| `js/router.js` | 44 | `ROUTES`, `parseRoute`, `applyRoute`, `go`, `replace` |
-| `js/data/basis.js` | 40 | `BASIS`, `BASIS_ORDER`, `defaultEnabled` |
-| `js/app.js` | 19 | none |
+| Module | Owns |
+|---|---|
+| `js/engine/rules.js` | `AREAS`, `SEVERITY`, `RULES` (26, each with `learn` pointing at a lesson id) |
+| `js/data/menu.js` | `MENU_ITEMS`: the live-row registry (label, `value(c)`, `controls`, `sid`, `rules`) |
+| `js/data/menu-tree.js` | aggregates `js/data/tree/*.js` into `TREE` (8 tabs), `TREE_ITEMS`, `TREE_PATH`, mode filters |
+| `js/data/tree/*.js` | the transcribed a6700 menu (source: help guide, read 2026-08-28); `main.js` is the tile screen |
+| `js/data/lessons.js` | aggregates `js/data/lessons/*.js`; `LESSONS`, `TRACKS`, `LEVELS`, `neighbours` |
+| `js/data/walkthroughs.js` | `WALKTHROUGHS` (13 video + 11 photo steps), `stepsForTrack`, `phasesForTrack` |
+| `js/views/camera.js` | the replica: cursor (`state.camera`), keyboard model, tile grid, detail card |
+| `js/views/learn.js` / `walkthrough.js` | index + lesson page; track pages + step cards |
+| `js/views/review.js` / `quick-edit.js` / `tools.js` | unchanged from the original build |
+| `js/engine/interactions.js`, `calc.js`, `lint.js` | which settings the camera reads; the arithmetic; the runner |
 
-Vendored from `packages/neorgon-ui/`: never edit in place, run the sync script instead: `js/neorgon-footer.js`, `js/neorgon-header.js`.
+Contracts between these are frozen in the root repo's `docs/plans/2026-08-22-rigcheck-rework.md` and held by `tests/content.test.mjs` (1,100+ assertions: every `learn`, `menu`, `ref`, `link`, `lesson` and `set[].path` reference must resolve).
+
+Vendored from `packages/neorgon-ui/`: never edit in place, run the sync script instead: `js/neorgon-footer.js`, `js/neorgon-header.js`, `js/neorgon-dom.js`.
 
 ## Data
 
-No persisted state: everything lives in memory for the session.
+Storage keys (all `cadrage-*`): `configs`, `active`, `prefs`, `progress` (lesson ids and `walk:<stepId>`), `rules-enabled`.
 
 ## Conventions
 
 - Zero build step. Plain ES modules loaded by `js/app.js`.
 - Header and footer come from the shared kits. Do not add site-local `.neo-footer` or `.header-bar` CSS.
-- The fleet guideline is ~500 lines per module; `js/engine/rules.js` is already past it. Split when touching it, do not grow it further.
+- Every control writes through `data-path`; events.js is the only writer.
+- Lesson bodies are markdown inside template literals: no backtick and no dollar-brace inside a body, ever. The content test enforces the em-dash and banned-word rules over all data files.
+- `js/engine/rules.js` is past the ~500-line guideline. Split when touching it, do not grow it further.
 
 ## Gotchas
 
-TODO: the non-obvious failures. What broke here before, what looks wrong but is deliberate, what a reasonable change would break. This is the highest-value section, leave it empty rather than filling it with generic advice.
+- **`patchDerived` must look the zone up fresh** (`document.getElementById`, not the `$` cache in utils). The zone div is replaced by every full render; patching the cached detached node updates nothing and looks exactly like an event handler that never ran. It did, for hours.
+- **The tree and the live registry are different layers.** `js/data/tree/` is what the body shows (transcribed, mostly read-only rows); `js/data/menu.js` is what the setup models. A tree row goes live by carrying `ref: <menu.js id>`. Never invent a control on a tree row without a ref; the camera view renders unmodelled rows as documentation on purpose.
+- **Embed LUT File does not exist on the a6700.** The full help-guide menu list (read 2026-08-28) has no such row; it is FX-line. The rule `format/embed-lut-locked-on-sd` is deliberately `unverified` (ships off) and the config keeps `colour.embedLut` for old notes. Do not "fix" the rule back to sony-spec.
+- **Var. Shutter and Anti-flicker Shoot. are children of one row** (`anti-flicker-set`, Shooting > Shutter/Silent), and Shutter Speed exists only as a Main-tab tile. That is the camera's real shape, not a modelling shortcut.
+- **Setup-tab rows ignore the dial.** Their transcription `modes` meant "acts on", so the generator moved it to `actsOn` and forced `modes: 'both'`. Filter Setup by mode and rows will wrongly vanish.
+- Camera keyboard: arrows move, Enter descends, Escape ascends; legacy key names (`Down`, `Esc`) are normalised in events.js because automation and old engines send them.
 
 ## Do not touch
 

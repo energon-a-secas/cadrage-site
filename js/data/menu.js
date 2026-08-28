@@ -159,6 +159,13 @@ export const MENU = [
             note: 'A dial on the body, not a menu page. It lives here because every flicker answer reads it.',
           },
           {
+            id: 'aperture', label: 'Aperture',
+            value: c => (Number.isFinite(c.lens.aperture) ? `f/${c.lens.aperture}` : 'n/a'),
+            controls: [num('lens.aperture', 1.0, 22, 0.1)],
+            rules: ['focus/dof-narrower-than-subject'],
+            note: 'A ring or dial on the body. It lives here because depth of field reads it, and the Main screen shows it as a tile.',
+          },
+          {
             id: 'iso', label: 'ISO',
             value: c => (c.exposure.iso.mode === 'auto'
               ? `Auto ${c.exposure.iso.min ?? '?'}-${c.exposure.iso.max ?? '?'}`
@@ -183,6 +190,13 @@ export const MENU = [
             ],
             sid: 'iso',
             rules: ['exposure/iso-auto-range-drift'],
+          },
+          {
+            id: 'exposure-comp', label: 'Exposure Comp.',
+            value: c => (Number.isFinite(c.exposure.ev) && c.exposure.ev !== 0 ? `${c.exposure.ev > 0 ? '+' : ''}${c.exposure.ev} EV` : '0 EV'),
+            controls: [num('exposure.ev', -5, 5, 0.1)],
+            rules: [],
+            note: 'Moves the automatic modes\' target. In full manual it does nothing unless ISO is on Auto.',
           },
           {
             id: 'var-shutter', label: 'Var. Shutter',
@@ -250,14 +264,6 @@ export const MENU = [
             ])],
             sid: 'lut',
             rules: ['inert/lut-without-log'],
-          },
-          {
-            id: 'embed-lut', label: 'Embed LUT File',
-            value: c => onOff(c.colour.embedLut),
-            controls: [tgl('colour.embedLut')],
-            sid: 'embed-lut',
-            rules: ['format/embed-lut-locked-on-sd'],
-            note: 'Locked to Off on SD and SDHC cards. The card type is physical, so it is set in the review, not here.',
           },
           {
             id: 'wb', label: 'White Balance',
@@ -367,6 +373,12 @@ export const MENU = [
             value: c => FOCUS_AREAS.find(a => a.value === c.focus.area)?.label || c.focus.area,
             controls: [sel('focus.area', FOCUS_AREAS)],
             sid: 'focus-area',
+            rules: [],
+          },
+          {
+            id: 'subject-recognition', label: 'Subject Recog in AF',
+            value: c => onOff(c.focus.subjectRecognition),
+            controls: [tgl('focus.subjectRecognition')],
             rules: [],
           },
           {

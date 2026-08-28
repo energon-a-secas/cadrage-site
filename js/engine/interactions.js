@@ -29,17 +29,14 @@ export const SETTINGS = [
     status: () => ({ state: 'active' }),
   },
   {
-    id: 'embed-lut', label: 'Embed LUT File', area: 'format', basis: 'sony-spec',
+    id: 'embed-lut', label: 'Embed LUT File', area: 'format', basis: 'unverified',
     value: c => (c.colour.embedLut ? 'On' : 'Off'),
     status: c => {
       if (!c.colour.embedLut) return { state: 'off' };
-      if (c.format.card === 'sd' || c.format.card === 'sdhc') {
-        return { state: 'ignored', why: 'Sony locks this to Off on SD and SDHC cards.' };
-      }
-      if (!logForcesPpOff(c.colour.log)) {
-        return { state: 'ignored', why: 'There is no Log footage to embed a LUT into.' };
-      }
-      return { state: 'active' };
+      return {
+        state: 'unknown',
+        why: 'The a6700 help guide lists no Embed LUT File row (checked 2026-08-28); it is documented for the FX line. A value recorded here likely describes a different body.',
+      };
     },
   },
 

@@ -159,7 +159,7 @@ function formatGroup(c) {
         { value: 'sdhc', label: 'SDHC' },
         { value: 'sd', label: 'SD' },
       ],
-      hint: 'Embed LUT File is locked off on SD and SDHC.',
+      hint: 'On the FX bodies that have the embed row, SD and SDHC lock it off.',
     }),
   ].join(''));
 }
@@ -190,7 +190,8 @@ function colourGroup(c) {
         { value: 'slog3', label: 'S-Log3' },
         { value: 'user1', label: 'User LUT 1' }],
     }),
-    toggle({ path: 'colour.embedLut', label: 'Embed LUT File', checked: c.colour.embedLut }),
+    toggle({ path: 'colour.embedLut', label: 'Embed LUT File', checked: c.colour.embedLut,
+      hint: 'No such row in the a6700 help guide; documented for the FX line. Kept in case the note describes another body.' }),
     select({
       path: 'colour.wb.mode', label: 'White balance', value: c.colour.wb.mode,
       options: [

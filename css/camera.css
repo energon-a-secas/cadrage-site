@@ -1,0 +1,321 @@
+/* ── Camera replica ─────────────────────────────────────────
+   The a6700 menu screen. Layout facts (vertical tab strip, numbered
+   group chips, two-column rows, inverted selection bar, tile-grid Main)
+   are transcribed from the help guide; the guide's art is grayscale,
+   so the tab accent colours below are an approximation of the shipping
+   camera, not data. See js/data/menu-tree.js. */
+
+.cam {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: var(--space-6);
+  align-items: start;
+}
+
+/* ── The LCD ─────────────────────────────────────────────── */
+.cam__frame {
+  background: #0b0d10;
+  border: 1px solid #000;
+  border-radius: var(--radius);
+  box-shadow: 0 0 0 6px #16181d, 0 0 0 7px rgba(255, 255, 255, 0.08), 0 18px 40px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.cam__topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  background: #16181d;
+  border-bottom: 1px solid #000;
+}
+.cam__crumb {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: #e8eaed;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cam__mode { display: flex; gap: 2px; }
+.cam__modebtn {
+  font: inherit;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  padding: 2px var(--space-2);
+  background: #0b0d10;
+  color: #9aa0a6;
+  border: 1px solid #2a2e35;
+  cursor: pointer;
+}
+.cam__modebtn:first-child { border-radius: 4px 0 0 4px; }
+.cam__modebtn:last-child { border-radius: 0 4px 4px 0; }
+.cam__modebtn.is-on { background: #e8eaed; color: #111; border-color: #e8eaed; }
+
+.cam__cols {
+  display: grid;
+  grid-template-columns: 76px 44px minmax(0, 1fr);
+  height: 420px;
+}
+
+/* ── Tab strip ───────────────────────────────────────────── */
+.cam__tabs {
+  display: flex;
+  flex-direction: column;
+  background: #101216;
+  border-right: 1px solid #000;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.cam__tabs::-webkit-scrollbar { display: none; }
+.cam__tab {
+  font: inherit;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: var(--space-2) 2px;
+  background: none;
+  border: 0;
+  border-left: 3px solid transparent;
+  color: #9aa0a6;
+  cursor: pointer;
+}
+.cam__tabicon {
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  background: var(--tab-accent, #3c4043);
+  opacity: 0.55;
+}
+.cam__tablabel {
+  overflow-wrap: anywhere;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-align: center;
+  line-height: 1.1;
+}
+.cam__tab.is-active { color: #e8eaed; border-left-color: var(--tab-accent, #e8eaed); background: #16181d; }
+.cam__tab.is-active .cam__tabicon { opacity: 1; }
+/* Approximated accents; the guide states no colours. */
+.cam__tab[data-tabid="my-menu"] { --tab-accent: #8a8f98; }
+.cam__tab[data-tabid="main"] { --tab-accent: #c8ccd4; }
+.cam__tab[data-tabid="shooting"] { --tab-accent: #d6467a; }
+.cam__tab[data-tabid="exposure-color"] { --tab-accent: #d69a1f; }
+.cam__tab[data-tabid="focus"] { --tab-accent: #7bb32e; }
+.cam__tab[data-tabid="playback"] { --tab-accent: #3d9be0; }
+.cam__tab[data-tabid="network"] { --tab-accent: #9a6ee0; }
+.cam__tab[data-tabid="setup"] { --tab-accent: #2eb3a2; }
+
+/* ── Group chips ─────────────────────────────────────────── */
+.cam__groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2) 6px;
+  background: #0e1013;
+  border-right: 1px solid #000;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.cam__groups::-webkit-scrollbar { display: none; }
+.cam__group {
+  font: inherit;
+  background: none;
+  border: 1px solid #2a2e35;
+  border-radius: 6px;
+  color: #9aa0a6;
+  cursor: pointer;
+  padding: var(--space-1) 0;
+}
+.cam__groupnum { font-size: var(--text-xs); font-weight: 700; }
+.cam__group.is-active { background: #e8eaed; border-color: #e8eaed; color: #111; }
+
+/* Which column holds the wheel: a soft ring on the active element. */
+.cam[data-level="tabs"] .cam__tab.is-active,
+.cam[data-level="groups"] .cam__group.is-active,
+.cam[data-level="items"] .cam__item.is-active,
+.cam[data-level="items"] .cam__tile.is-active {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+/* ── Item rows ───────────────────────────────────────────── */
+.cam__items {
+  list-style: none;
+  margin: 0;
+  padding: var(--space-1) 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #2a2e35 transparent;
+}
+.cam__item {
+  font: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  background: none;
+  border: 0;
+  border-left: 3px solid transparent;
+  color: #c6cad1;
+  cursor: pointer;
+  text-align: left;
+  min-height: 42px;
+}
+.cam__item[data-flag="error"] { border-left-color: #e11d48; }
+.cam__item[data-flag="warn"] { border-left-color: #fb923c; }
+.cam__item[data-flag="note"] { border-left-color: #38bdf8; }
+.cam__item[data-flag="inert"] { border-left-color: #64748b; }
+.cam__itemlabel { font-size: var(--text-sm); font-weight: 600; }
+.cam__itemvalue {
+  font-size: var(--text-sm);
+  color: #8a8f98;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 55%;
+}
+.cam__item.is-active { background: #e8eaed; color: #111; }
+.cam__item.is-active .cam__itemvalue { color: #333; }
+.cam__dim { opacity: 0.6; }
+
+/* ── Main-tab tiles ──────────────────────────────────────── */
+.cam__tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 6px;
+  padding: var(--space-2);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #2a2e35 transparent;
+  align-content: start;
+}
+.cam__tile {
+  font: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--space-2) var(--space-3);
+  background: #14161a;
+  border: 1px solid #23262c;
+  border-radius: 6px;
+  color: #c6cad1;
+  cursor: pointer;
+  text-align: left;
+  min-height: 58px;
+}
+.cam__tile[data-flag="error"] { border-color: rgba(225, 29, 72, 0.6); }
+.cam__tile[data-flag="warn"] { border-color: rgba(251, 146, 60, 0.5); }
+.cam__tilelabel {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #8a8f98;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cam__tilevalue { font-size: var(--text-sm); font-weight: 600; }
+.cam__tile.is-active { background: #e8eaed; border-color: #e8eaed; color: #111; }
+.cam__tile.is-active .cam__tilelabel { color: #444; }
+
+.cam__hintbar {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-4);
+  padding: var(--space-1) var(--space-3);
+  background: #101216;
+  border-top: 1px solid #000;
+  font-size: var(--text-xs);
+  color: #6b7280;
+}
+
+/* ── Detail card ─────────────────────────────────────────── */
+.camdetail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  max-height: 560px;
+  overflow-y: auto;
+}
+.camdetail__row--child {
+  border-left: 2px solid var(--border);
+  padding-left: var(--space-4);
+}
+.camdetail__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+.camdetail__title { font-size: var(--text-base); font-weight: 700; }
+.camdetail__doc {
+  margin-top: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+.camdetail__note, .camdetail__static {
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+.camdetail__controls {
+  margin-top: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.camdetail__ctrl {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+.camdetail__ctrl > span {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  min-width: 0;
+  flex: 0 1 auto;
+}
+.camdetail__ctrl .field__input { flex: 1 1 auto; width: auto; min-width: 0; }
+.camdetail__ctrl input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); }
+.camdetail__flags {
+  margin-top: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.camdetail__pointers {
+  border-top: 1px solid var(--border-subtle);
+  padding-top: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 980px) {
+  .cam { grid-template-columns: 1fr; }
+  .camdetail { max-height: none; }
+}
+@media (max-width: 600px) {
+  .cam__cols { grid-template-columns: 52px 38px minmax(0, 1fr); height: 380px; }
+  .cam__tablabel { display: none; }
+  .cam__tab { padding: var(--space-2) 0; }
+  .cam__frame { box-shadow: 0 0 0 4px #16181d, 0 0 0 5px rgba(255, 255, 255, 0.08); }
+  .cam__hintbar { display: none; }
+}

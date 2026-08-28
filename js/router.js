@@ -1,16 +1,24 @@
 // ── Router ───────────────────────────────────────────────────
 // `#/section/param?query`. Unknown sections fall back to review rather
-// than rendering nothing.
+// than rendering nothing. Old section names stay routable as aliases so
+// a link shared before the rework still lands somewhere sensible.
 
 import { state } from './state.js';
 
-export const ROUTES = ['review', 'menu', 'learn', 'post', 'profiles', 'tools'];
+export const ROUTES = ['learn', 'walkthrough', 'camera', 'review', 'tools'];
+
+/** Pre-rework names, kept as redirects rather than dead ends. */
+const ALIASES = {
+  menu: 'camera',
+  post: 'review',
+  profiles: 'review',
+};
 
 export function parseRoute() {
   const raw = location.hash.replace(/^#\/?/, '');
   const [pathPart, queryPart] = raw.split('?');
   const parts = pathPart.split('/').filter(Boolean);
-  const section = parts[0] || 'review';
+  const section = ALIASES[parts[0]] || parts[0] || 'review';
   return {
     section: ROUTES.includes(section) ? section : 'review',
     param: parts[1] ? decodeURIComponent(parts[1]) : null,

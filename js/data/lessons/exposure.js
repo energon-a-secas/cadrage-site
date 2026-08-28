@@ -58,7 +58,7 @@ On the A6700 the three live in different places: ISO and shutter speed are dials
     order: 20,
     basis: 'physics',
     summary: 'The f-number sets light and depth of field at once. Wide open is bright and thin; stopped down is dim and deep.',
-    menu: ['exposure-mode', 'aperture-dial'],
+    menu: ['shoot-mode'],
     tools: ['dof', 'equiv'],
     related: ['depth-of-field', 'exposure-triangle'],
     body: `
@@ -129,7 +129,7 @@ When the 180-degree ideal and the flicker-clean speed disagree, the flicker-clea
     order: 40,
     basis: 'sony-spec',
     summary: 'The mode dial decides which side of the triangle you hold and which the camera is free to move.',
-    menu: ['exposure-mode', 'exposure-ctrl-type'],
+    menu: ['shoot-mode'],
     tools: [],
     related: ['exposure-triangle', 'metering-and-compensation'],
     body: `
@@ -142,7 +142,7 @@ When the 180-degree ideal and the flicker-clean speed disagree, the flicker-clea
 
 The A6700 separates stills and movie with the Still/Movie/S&Q dial, and the mode dial applies inside each. For video, **M** with manual ISO is the default for a controlled shoot: every exposure change in a take is then one you made.
 
-**Exposure Ctrl Type** (Exposure/Color > Exposure) switches between the P/A/S/M dial and a Flexible Exp. Mode where aperture, shutter and ISO are each set to Auto or Manual independently. Both are legitimate; the Review assumes the P/A/S/M model because that is what the setup object records.
+For movies the mode lives in a menu row rather than on the dial: **Shoot Mode** under Shooting, offering the same P, A, S and M for the movie side. The Review assumes the P/A/S/M model because that is what the setup object records.
 
 ### The rule of thumb
 
@@ -190,7 +190,7 @@ Under Log Shooting the camera pins the curve to a fixed range and ISO becomes a 
     order: 60,
     basis: 'sony-spec',
     summary: 'The meter suggests; zebras and the histogram tell the truth. Compensation moves the suggestion, not the truth.',
-    menu: ['metering-mode', 'exposure-comp', 'zebra-display', 'zebra-level', 'histogram'],
+    menu: ['metering-mode', 'exposure-comp', 'zebra-display', 'zebra-level'],
     tools: [],
     related: ['exposure-modes', 'iso-and-exposure'],
     body: `

@@ -463,18 +463,19 @@ export const RULES = [
     id: 'format/embed-lut-locked-on-sd',
     area: 'format',
     severity: 'note',
-    basis: 'sony-spec',
-    title: 'Embed LUT File will not stay on with this card',
+    basis: 'unverified',
+    title: 'Embed LUT File is another body\'s row',
     learn: 'luts',
     applies: c => c.colour.embedLut === true,
     test: c => {
       const card = c.format.card;
+      const caveat = 'The a6700 help guide lists no Embed LUT File row anywhere in its menu (checked 2026-08-28). The row and its SD/SDHC lock are documented for the FX line, which is why this rule is unverified here rather than Sony spec.';
       if (card === 'sdxc' || card === 'cfexpress') {
-        return { fires: false, detail: 'Card type supports embedding the LUT file.' };
+        return { fires: false, detail: `Card type would support embedding on the bodies that have the row. ${caveat}` };
       }
       return {
         fires: true,
-        detail: 'Sony locks Embed LUT File to Off when recording to SD or SDHC cards. If the setting looks enabled but the card is SD/SDHC, nothing is being embedded, and footage will arrive in the editor without the LUT that made it look right on the camera.',
+        detail: `On the bodies that have the row, Sony locks Embed LUT File to Off for SD and SDHC cards, so footage arrives in the editor without the LUT that made it look right on the camera. ${caveat}`,
       };
     },
   },

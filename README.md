@@ -30,8 +30,7 @@ Review camera settings to find the ones that contradict each other, do nothing, 
 
 ## Overview
 
-[2-3 sentences: what the tool does, who it helps, what makes it different.
-Lead with what the user gets. Use active verbs.]
+Cadrage teaches one camera properly instead of every camera vaguely. Learn the exposure triangle and focus from basics to advanced, walk through a video or photo setup step by step, and do it all on a replica of the Sony a6700 menu transcribed from the official help guide. Underneath sits a 26-rule review that reads your whole setup (room, lens and edit included) and names the settings that contradict each other, do nothing, or get corrected twice in post, with every claim carrying its provenance.
 
 **Live:** cadrage.neorgon.com
 
@@ -39,9 +38,11 @@ Lead with what the user gets. Use active verbs.]
 
 ## Features
 
-- **[Feature name]** -- [what it does]
-- **[Feature name]** -- [what it does]
-- **[Feature name]** -- [what it does]
+- **Learn** -- 24 lessons in six tracks, basics before advanced: the exposure triangle, focus, colour, light and flicker, formats, post
+- **Walkthrough** -- ordered passes for video and photography; video steps can write their argued-for values straight into the active setup
+- **Camera** -- the a6700 menu as the body shows it: 8 tabs, 280 rows transcribed from the help guide, live controls where the setup models a row and honest documentation where it does not
+- **Review** -- 26 rules that lint the setup, each finding naming whether it rests on physics, Sony spec, convention, your notes, or nothing verifiable
+- **Calculators** -- flicker, depth of field, backdrop spill, exposure equivalence, card time
 
 ---
 
@@ -67,13 +68,18 @@ python3 -m http.server 8000
 cadrage-site/
 ├── index.html          # HTML shell
 ├── css/
-│   └── style.css       # All styles
+│   ├── style.css       # Shared primitives
+│   ├── learn.css       # Lessons and walkthrough
+│   └── camera.css      # The a6700 replica
 ├── js/
 │   ├── app.js          # Entry point, imports and initializes
 │   ├── state.js        # Shared state, localStorage
-│   ├── render.js       # DOM rendering
-│   ├── events.js       # Event handlers
-│   └── utils.js        # Shared helpers
+│   ├── render.js       # View switch, derived-zone patching
+│   ├── events.js       # Every writer: data-path, camera cursor, progress
+│   ├── engine/         # rules, interactions, calc, lint
+│   ├── data/           # setup shape, live rows, menu tree, lessons, walkthroughs
+│   └── views/          # learn, walkthrough, camera, review, quick-edit, tools
+├── tests/              # engine.test.mjs + content.test.mjs (make test)
 ├── favicon.ico
 ├── energon-classic-logo.png
 ├── robots.txt

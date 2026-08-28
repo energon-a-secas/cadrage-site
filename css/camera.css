@@ -5,6 +5,16 @@
    so the tab accent colours below are an approximation of the shipping
    camera, not data. See js/data/menu-tree.js. */
 
+/* One quiet provenance line where the intro panel used to be. */
+.cam-note {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  line-height: 1.5;
+  max-width: 88ch;
+}
+.cam-note a { color: var(--accent-bright); text-decoration: none; }
+.cam-note a:hover { text-decoration: underline; }
+
 .cam {
   display: grid;
   grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
@@ -90,7 +100,6 @@
   opacity: 0.55;
 }
 .cam__tablabel {
-  overflow-wrap: anywhere;
   font-size: 0.62rem;
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -129,6 +138,7 @@
   color: #9aa0a6;
   cursor: pointer;
   padding: var(--space-1) 0;
+  min-height: 32px;
 }
 .cam__groupnum { font-size: var(--text-xs); font-weight: 700; }
 .cam__group.is-active { background: #e8eaed; border-color: #e8eaed; color: #111; }

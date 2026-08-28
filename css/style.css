@@ -622,36 +622,51 @@ button:active,
    the findings on the right. 900px is too narrow for the interaction table. */
 .container { max-width: 1180px; }
 
-/* ── Nav rail ─────────────────────────────────────────────── */
+/* ── Nav rail ─────────────────────────────────────────────────
+   The second row of the headbar, not a separate strip: it continues
+   the slate skin's end colour, shares the bar's side padding, docks
+   under the 56px app bar, and rises to the top when the kit auto-hides
+   the bar (the kit README's documented sibling pattern). Styling here
+   touches only site-owned classes, never .header-*. */
 .nav-rail {
   position: sticky;
-  top: 0;
+  top: var(--header-h-app, 56px);
   z-index: calc(var(--z-sticky-header) - 1);
-  background: rgba(4, 7, 20, 0.92);
+  background: linear-gradient(180deg, #0b1120 0%, rgba(4, 7, 20, 0.94) 100%);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--border-subtle);
+  transition: top 0.2s ease;
 }
+.header-bar.header-hidden ~ .nav-rail { top: 0; }
 .nav-rail__inner {
-  max-width: 1180px;
-  margin: 0 auto;
-  padding: 0 var(--space-6);
+  padding: 0 var(--space-6, 24px);
   display: flex;
   gap: var(--space-1);
   overflow-x: auto;
   scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent);
+  mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent);
 }
 .nav-rail__inner::-webkit-scrollbar { display: none; }
 .nav-tab {
   flex: 0 0 auto;
-  padding: var(--space-3) var(--space-4);
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 var(--space-4);
   font-size: var(--text-sm);
   font-weight: 600;
+  letter-spacing: 0.01em;
   color: var(--text-muted);
   text-decoration: none;
   border-bottom: 2px solid transparent;
-  transition: color var(--dur), border-color var(--dur);
+  transition: color var(--dur), border-color var(--dur), background var(--dur);
 }
-.nav-tab:hover { color: var(--text-secondary); }
+.nav-tab:hover {
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.04);
+}
+.nav-tab:focus-visible { outline-offset: -2px; }
 .nav-tab.is-active {
   color: var(--accent-bright);
   border-bottom-color: var(--accent);

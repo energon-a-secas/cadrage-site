@@ -21,7 +21,7 @@ import { MENU_ITEMS } from '../data/menu.js';
 import { TREE, TREE_ITEM_BY_ID, TREE_PATH, resolveItem, groupsForMode } from '../data/menu-tree.js';
 import { LESSONS } from '../data/lessons.js';
 import { WALKTHROUGHS } from '../data/walkthroughs.js';
-import { panel, chip, severityPill, basisChip } from '../ui.js';
+import { chip, severityPill, basisChip } from '../ui.js';
 
 const LIVE_BY_ID = Object.fromEntries(MENU_ITEMS.map(i => [i.id, i]));
 
@@ -95,11 +95,10 @@ export function renderCamera() {
 }
 
 function intro() {
-  return panel({
-    title: 'The menu, as the body shows it',
-    lead: 'Structure and row labels transcribed from the a6700 help guide. Rows the setup models are live: edit them here and the review re-judges. Rows it does not model say so instead of pretending. Arrows move, Enter descends, Escape is the MENU button.',
-    body: '',
-  });
+  return `
+    <p class="cam-note">The menu, as the body shows it: structure and row labels transcribed from the
+    <a href="https://helpguide.sony.net/ilc/2320/v1/en/" target="_blank" rel="noopener noreferrer">a6700 help guide</a>.
+    Rows the setup models are live, and the review re-judges as you edit; the rest say not modelled instead of pretending.</p>`;
 }
 
 export function cameraDerived() {
@@ -124,7 +123,7 @@ export function cameraDerived() {
             ${TREE.map(t => `
               <button type="button" class="cam__tab${t.id === tab.id ? ' is-active' : ''}" data-cam-tab="${escHtml(t.id)}" data-tabid="${escHtml(t.id)}" title="${escHtml(t.label)}">
                 <span class="cam__tabicon" aria-hidden="true"></span>
-                <span class="cam__tablabel">${escHtml(t.label)}</span>
+                <span class="cam__tablabel">${escHtml(t.label).replace('/', '/&#8203;')}</span>
               </button>`).join('')}
           </nav>
           <nav class="cam__groups" aria-label="Menu groups">

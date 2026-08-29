@@ -107,7 +107,7 @@ const TOOL_IDS = ['flicker', 'dof', 'spill', 'equiv', 'card'];
   const banned = ['powerful', 'seamless', 'leverages', 'robust', 'utilize'];
   for (const f of files) {
     const text = readFileSync(f, 'utf8');
-    ok(`${f}: no em dash`, !text.includes('—'));
+    ok(`${f}: no em dash`, !text.includes('-'));
     for (const w of banned) {
       ok(`${f}: no '${w}'`, !new RegExp(`\\b${w}\\b`, 'i').test(text));
     }

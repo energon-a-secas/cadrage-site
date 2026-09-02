@@ -638,6 +638,9 @@ button:active,
   transition: top 0.2s ease;
 }
 .header-bar.header-hidden ~ .nav-rail { top: 0; }
+/* Companion for the NeoKeys chrome toggle's kit-owned state. Dormant until
+   this site opts into the H key; harmless meanwhile. */
+html[data-chrome="off"] .nav-rail { top: 0; }
 .nav-rail__inner {
   padding: 0 var(--space-6, 24px);
   display: flex;

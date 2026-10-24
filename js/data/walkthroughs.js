@@ -172,7 +172,7 @@ Single shot for composed work, continuous for moments you cannot re-run, the sel
   {
     id: 'p-mode',
     track: 'photo', phase: 'Exposure', title: 'Pick the exposure mode for the decision you care about',
-    menuId: 'shoot-mode', lesson: 'exposure-modes', tool: null,
+    menuId: 'still-shoot-mode', lesson: 'exposure-modes', tool: null,
     why: `
 A (aperture priority) when depth of field is the decision, S when motion is, M when the light is controlled and repeatable. M with Auto ISO is the working middle: you hold depth and motion, the camera rides gain inside limits you set next. P is for handing the camera to someone else.`,
     set: [],

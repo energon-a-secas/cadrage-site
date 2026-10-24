@@ -58,7 +58,7 @@ On the A6700 the three live in different places: ISO and shutter speed are dials
     order: 20,
     basis: 'physics',
     summary: 'The f-number sets light and depth of field at once. Wide open is bright and thin; stopped down is dim and deep.',
-    menu: ['shoot-mode'],
+    menu: ['aperture'],
     tools: ['dof', 'equiv'],
     related: ['depth-of-field', 'exposure-triangle'],
     body: `
@@ -129,7 +129,7 @@ When the 180-degree ideal and the flicker-clean speed disagree, the flicker-clea
     order: 40,
     basis: 'sony-spec',
     summary: 'The mode dial decides which side of the triangle you hold and which the camera is free to move.',
-    menu: ['shoot-mode'],
+    menu: ['still-shoot-mode'],
     tools: [],
     related: ['exposure-triangle', 'metering-and-compensation'],
     body: `
@@ -142,7 +142,7 @@ When the 180-degree ideal and the flicker-clean speed disagree, the flicker-clea
 
 The A6700 separates stills and movie with the Still/Movie/S&Q dial, and the mode dial applies inside each. For video, **M** with manual ISO is the default for a controlled shoot: every exposure change in a take is then one you made.
 
-For movies the mode lives in a menu row rather than on the dial: **Shoot Mode** under Shooting, offering the same P, A, S and M for the movie side. The Review assumes the P/A/S/M model because that is what the setup object records.
+For movies the mode dial does the same job: set the Still/Movie/S&Q dial to Movie and turn the mode dial to **M**. The menu row called **Shoot Mode** under Shooting is not an exposure mode. Sony's guide describes it as the choice between S&Q Motion and Time-lapse, applied when the Still/Movie/S&Q dial is at S&Q, and the a6700's menu has no other movie exposure-mode row. The Review assumes the P/A/S/M model because that is what the setup object records.
 
 ### The rule of thumb
 

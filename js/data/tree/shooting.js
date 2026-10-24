@@ -133,8 +133,8 @@ export const SHOOTING_TAB = {
     { id: 'shooting-mode', num: 4, label: 'Shooting Mode', items: [
       {
         id: 'shoot-mode', label: 'Shoot Mode', modes: 'movie',
-        doc: 'The movie-side exposure mode: P, A, S or M. Which side of the triangle you hold and which the camera may move.',
-        note: 'Printed with the S&Q and time-lapse icon prefixes.',
+        doc: 'What the S&Q position records: S&Q Motion or Time-lapse. Not an exposure mode; P, A, S and M come from the mode dial, for movies too.',
+        note: 'Printed with the S&Q and time-lapse icon prefixes. Help guide page "Shoot Mode (S&Q/time-lapse)" (read 2026-10-24): the setting applies when the Still/Movie/S&Q dial is set to S&Q. The menu list has no other movie exposure-mode row.',
       },
       {
         id: 'auto-scene-selection', label: 'Auto/Scene Selection', modes: 'still',

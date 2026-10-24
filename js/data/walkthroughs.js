@@ -43,7 +43,7 @@ export const WALKTHROUGHS = [
     track: 'video', phase: 'Format', title: 'Pick the container',
     menuId: 'file-format', lesson: 'codecs-and-bitrates', tool: 'card',
     why: `
-XAVC HS is HEVC: every mode is 10-bit and the files are smaller for the same quality, but they are heavier to decode on the edit machine. XAVC S is AVC: bigger files, plays everywhere, and its 4K list mixes 8-bit and 10-bit rows. If the edit is CapCut or an older machine, S is the safe answer; if the pipeline handles HEVC, HS gets you 10-bit at lower bitrates.`,
+XAVC HS is HEVC: every mode is 10-bit and the files are smaller for the same quality, but they are heavier to decode on the edit machine. XAVC S is AVC: bigger files, plays everywhere, and its lists mix 8-bit and 10-bit rows. XAVC S-I compresses each frame on its own (Intra), which Sony calls more suitable for editing; it is 4:2:2 10-bit only and 600M at 4K 60p, so it wants a V90 card and fills 128 GB in under half an hour. If the edit is CapCut or an older machine, S is the safe answer; if the pipeline handles HEVC, HS gets you 10-bit at lower bitrates. The size, 4K or HD, is part of the same choice.`,
     set: [],
   },
   {

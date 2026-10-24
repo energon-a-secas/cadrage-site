@@ -19,7 +19,7 @@ import {
   flicker, depthOfField, spillFalloff, equivalence, cardMinutes,
   SHUTTER_STEPS, COC_PRESETS,
 } from '../engine/calc.js';
-import { FORMATS, fpsFor, modesAtFps, CHROMA_LABELS } from '../data/bodies.js';
+import { FORMATS, fpsFor, modesAtFps, resFor, CHROMA_LABELS, RES_LABELS } from '../data/bodies.js';
 import { LENSES } from '../data/lenses.js';
 
 const DEFAULTS = {
@@ -27,7 +27,7 @@ const DEFAULTS = {
   dof: { lensId: 'zeiss-55-1.8', aperture: 1.8, distanceCm: 60 },
   spill: { fromCm: 5, toCm: 50, widthCm: 150 },
   equiv: { aperture: 1.8, denom: 120, iso: 800, field: 'denom', to: 100 },
-  card: { container: 'xavc-hs', fps: 60, bitrate: 100 },
+  card: { container: 'xavc-hs', res: '4k', fps: 60, bitrate: 100 },
 };
 
 /** Session-local inputs, seeded from the defaults on first render. */
@@ -185,16 +185,19 @@ const INPUTS = {
   },
   card() {
     const s = inputs('card');
-    // A container switch can invalidate the stored frame rate, and a frame
-    // rate switch can invalidate the bitrate. Fall back to the first offered
-    // value rather than render a select pointing at nothing.
-    const fpsList = fpsFor(s.container, '4k');
+    // A container switch can invalidate the stored size and frame rate, and
+    // a frame rate switch can invalidate the bitrate. Fall back to the first
+    // offered value rather than render a select pointing at nothing.
+    const sizes = resFor(s.container);
+    if (!sizes.includes(s.res)) s.res = sizes[0];
+    const fpsList = fpsFor(s.container, s.res);
     if (!fpsList.includes(s.fps)) s.fps = fpsList[0];
-    const modes = modesAtFps(s.container, '4k', s.fps);
+    const modes = modesAtFps(s.container, s.res, s.fps);
     const bitrates = [...new Set(modes.map(m => m.bitrate))];
     if (!bitrates.includes(s.bitrate)) s.bitrate = bitrates[0] ?? null;
     return [
       sel('card', 'container', s.container, Object.entries(FORMATS).map(([id, f]) => ({ value: id, label: f.label })), 'File Format'),
+      sel('card', 'res', s.res, sizes.map(r => ({ value: r, label: RES_LABELS[r] || r })), 'Size'),
       sel('card', 'fps', s.fps, fpsList.map(f => ({ value: f, label: `${f}p` })), 'Frame rate'),
       sel('card', 'bitrate', s.bitrate, bitrates.map(b => {
         const chromas = [...new Set(modes.filter(m => m.bitrate === b).map(m => m.chroma))];
@@ -323,7 +326,7 @@ const OUTPUTS = {
       ['Usable capacity assumed', `${r.usableGb.toFixed(0)} GB of the ${state.prefs.cardGb} GB sticker`],
     ];
     return `
-      <p class="calc-verdict">${escHtml(FORMATS[s.container].label)} 4K ${s.fps}p at ${s.bitrate}M fills a ${state.prefs.cardGb}GB card in <strong>${span}</strong>.</p>
+      <p class="calc-verdict">${escHtml(FORMATS[s.container].label)} ${escHtml(String(s.res).toUpperCase())} ${s.fps}p at ${s.bitrate}M fills a ${state.prefs.cardGb}GB card in <strong>${span}</strong>.</p>
       ${kvRows(rows)}
       <p class="calc-note">${escHtml(r.note)}</p>`;
   },

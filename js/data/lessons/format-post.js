@@ -16,16 +16,19 @@ export const FORMAT_POST_LESSONS = [
     body: `
 The Record Setting screen looks like four independent choices: container, frame rate, bitrate, chroma. On the A6700 it is one choice: a row in Sony's format table. Cadrage transcribes that table from Sony's Movie Settings page, so an invalid combination can be rejected instead of guessed.
 
-### The two containers
+### Three containers, two sizes
+
+File Format picks the container and the size together: XAVC HS 4K, XAVC S 4K, XAVC S HD, XAVC S-I 4K or XAVC S-I HD. 4K is 3840×2160 and HD is 1920×1080; XAVC HS has no HD option.
 
 - **XAVC HS** records HEVC (H.265). Every HS mode is 10-bit. The codec is efficient, more picture per megabit, but heavier to decode: the editor pays at playback what the card saved at record time.
-- **XAVC S** records AVC (H.264), with wider editor support. Its 4K table mixes 8-bit and 10-bit rows, so choosing XAVC S does not by itself decide bit depth. The row does.
+- **XAVC S** records AVC (H.264), with wider editor support. Its tables mix 8-bit and 10-bit rows, so choosing XAVC S does not by itself decide bit depth. The row does.
+- **XAVC S-I** compresses every frame on its own (Intra), where the other two compress groups of frames together (Long GOP). Sony says Intra responds better when editing and Long GOP compresses more efficiently, so the cost is card space: every S-I row is 4:2:2 10bit, 4K 60p runs at 600M, and Sony lists an SDXC V90 card or faster for it. It cannot record a proxy alongside, either.
 
 ### Inside a frame rate, two knobs
 
-Fix a container and a frame rate and what remains is a short list of bitrate and chroma pairings. XAVC HS 4K at 60p runs from 45M 4:2:0 10bit up to 200M 4:2:2 10bit. Bitrate buys compression headroom. Chroma decides how much colour resolution survives: 4:2:2 keeps twice the colour samples of 4:2:0, which matters for keying and heavy grading more than for straight viewing.
+Fix a container, a size and a frame rate and what remains is a short list of bitrate and chroma pairings. XAVC HS 4K at 60p runs from 45M 4:2:0 10bit up to 200M 4:2:2 10bit. Bitrate buys compression headroom. Chroma decides how much colour resolution survives: 4:2:2 keeps twice the colour samples of 4:2:0, which matters for keying and heavy grading more than for straight viewing. XAVC S-I leaves no choice at all: one row per frame rate, its bitrate set by the rate, from 600M at 4K 60p down to 89M at HD 24p.
 
-Not every pairing exists at every rate. XAVC HS has no 8-bit rows at all, and no 4K 30p. When a setup records a combination that is not in the table, the Review names it as invalid and lists what the container does offer at that rate, rather than silently keeping it: a note claiming a mode the camera does not offer is a note that cannot be reproduced.
+Not every pairing exists at every rate. XAVC HS has no 8-bit rows at all, and no 4K 30p; XAVC S-I has no 4:2:0 rows and no 120p. When a setup records a combination that is not in the table, the Review names it as invalid and lists what the container does offer at that rate, rather than silently keeping it: a note claiming a mode the camera does not offer is a note that cannot be reproduced.
 
 ### Displayed rates versus recorded rates
 
@@ -36,7 +39,7 @@ Two footnote-grade facts from Sony's tables:
 
 ### Card time is arithmetic
 
-Bitrate is megabits per second, so record time is division. 100M is 0.75 GB per minute; a 128 GB card holds roughly 158 minutes of it, or about 57 minutes at 280M. The **Record time per card** calculator does this arithmetic, assuming formatted capacity around 93% of the sticker figure and a constant bitrate. Long-GOP modes vary with scene complexity, so treat the result as an estimate rather than a countdown.
+Bitrate is megabits per second, so record time is division. 100M is 0.75 GB per minute; a 128 GB card holds roughly 158 minutes of it, or about 57 minutes at 280M. XAVC S-I 4K 60p at 600M is the far end: about 26 minutes by the same arithmetic, and 25 in Sony's own recordable-time table. The **Record time per card** calculator does this arithmetic, assuming formatted capacity around 93% of the sticker figure and a constant bitrate. Sony notes the camera records at a variable bit rate, so fast motion shortens the real time; treat the result as an estimate rather than a countdown.
 `,
   },
   {

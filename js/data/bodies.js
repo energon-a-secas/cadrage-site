@@ -2,12 +2,17 @@
 // Sensor geometry, ISO ranges, and the recording-format matrix.
 // The A6700 format matrix is transcribed from Sony's Movie Settings
 // page, so an invalid combination can be rejected instead of guessed.
-// Source: helpguide.sony.net/ilc/2320/v1/en/ — Movie Settings, ISO.
+// Source: helpguide.sony.net/ilc/2320/v1/en/ (Movie Settings, ISO).
+// File Format, Movie Settings and the memory card page were read again
+// on 2026-10-24 for XAVC S HD and XAVC S-I.
 
 /**
  * Record Setting rows, keyed by container then resolution.
  * `fps` lists the frame rates that offer that exact bitrate + chroma.
- * XAVC HS has no 8-bit modes at all; XAVC S 4K mixes 8- and 10-bit.
+ * XAVC HS has no 8-bit modes at all; XAVC S mixes 8- and 10-bit at
+ * both sizes. XAVC S-I is 4:2:2 10-bit only and its bitrate follows
+ * the frame rate, so 60p and 50p are separate rows where the Long GOP
+ * tables pair them.
  */
 export const FORMATS = {
   'xavc-hs': {
@@ -36,7 +41,7 @@ export const FORMATS = {
     label: 'XAVC S',
     codec: 'AVC / H.264',
     basis: 'sony-spec',
-    note: 'Wider editor support. 4K offers both 8-bit and 10-bit rows.',
+    note: 'Wider editor support. 4K and HD both offer 8-bit and 10-bit rows.',
     modes: {
       '4k': [
         { fps: [60, 50], bitrate: 200, chroma: '422-10' },
@@ -50,8 +55,51 @@ export const FORMATS = {
         { fps: [120, 100], bitrate: 280, chroma: '422-10' },
         { fps: [120, 100], bitrate: 200, chroma: '420-8' },
       ],
+      hd: [
+        { fps: [60, 50], bitrate: 50, chroma: '422-10' },
+        { fps: [60, 50], bitrate: 50, chroma: '420-8' },
+        { fps: [60, 50], bitrate: 25, chroma: '420-8' },
+        { fps: [30, 25], bitrate: 50, chroma: '422-10' },
+        { fps: [30, 25], bitrate: 50, chroma: '420-8' },
+        { fps: [30, 25], bitrate: 16, chroma: '420-8' },
+        { fps: [24], bitrate: 50, chroma: '422-10' },
+        { fps: [24], bitrate: 50, chroma: '420-8' },
+        { fps: [120, 100], bitrate: 100, chroma: '420-8' },
+        { fps: [120, 100], bitrate: 60, chroma: '420-8' },
+      ],
     },
   },
+  // The specifications page names two movie codecs, HEVC for XAVC HS and
+  // AVC for XAVC S, with no separate line for S-I, so it is filed as AVC.
+  // File Format is where Sony says S-I uses Intra compression.
+  'xavc-s-i': {
+    label: 'XAVC S-I',
+    codec: 'AVC / H.264 Intra',
+    basis: 'sony-spec',
+    note: 'Intra: every frame compressed on its own, which Sony calls more suitable for editing than Long GOP. Every S-I mode is 4:2:2 10-bit, Sony lists SDXC V90 or higher for it, and it records no proxy.',
+    modes: {
+      '4k': [
+        { fps: [60], bitrate: 600, chroma: '422-10' },
+        { fps: [50], bitrate: 500, chroma: '422-10' },
+        { fps: [30], bitrate: 300, chroma: '422-10' },
+        { fps: [25], bitrate: 250, chroma: '422-10' },
+        { fps: [24], bitrate: 240, chroma: '422-10' },
+      ],
+      hd: [
+        { fps: [60], bitrate: 222, chroma: '422-10' },
+        { fps: [50], bitrate: 185, chroma: '422-10' },
+        { fps: [30], bitrate: 111, chroma: '422-10' },
+        { fps: [25], bitrate: 93, chroma: '422-10' },
+        { fps: [24], bitrate: 89, chroma: '422-10' },
+      ],
+    },
+  },
+};
+
+/** File Format pairs a container with one of these sizes. */
+export const RES_LABELS = {
+  '4k': '4K (3840×2160)',
+  hd: 'HD (1920×1080)',
 };
 
 export const CHROMA_LABELS = {
@@ -85,7 +133,7 @@ export const BODIES = {
     // guide. The widely repeated 800/2500 pair has no primary source, so it
     // lives in gammas.js as `unverified` and its rule ships disabled.
     baseIso: null,
-    formats: ['xavc-hs', 'xavc-s'],
+    formats: ['xavc-hs', 'xavc-s', 'xavc-s-i'],
     settingsExport: {
       humanReadable: false,
       note: 'Save/Load Settings writes an opaque binary file to the card, and there are three recall registers (M1-M3). Nothing readable comes off the camera, which is why notes are the interchange format here.',
@@ -115,4 +163,19 @@ export function fpsFor(container, res = '4k') {
   const all = new Set();
   for (const m of modesFor(container, res)) for (const f of m.fps) all.add(f);
   return [...all].sort((a, b) => a - b);
+}
+
+/** Sizes this container records, in File Format order. */
+export function resFor(container) {
+  return Object.keys(FORMATS[container]?.modes || {});
+}
+
+/**
+ * Select options plus the stored value when the table does not offer it.
+ * Without it a select shows its first option while the setup records
+ * another, and a lone offered row looks chosen and can never be picked.
+ */
+export function withStored(options, stored, label) {
+  if (stored === null || stored === undefined || options.some(o => o.value === stored)) return options;
+  return [...options, { value: stored, label: `${label} (not offered)` }];
 }

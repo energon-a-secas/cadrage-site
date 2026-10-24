@@ -59,7 +59,7 @@ function configBar(config) {
         <select class="field__input" id="configPicker">${options}</select>
       </label>
       <div class="config-bar__meta">
-        ${chip(FORMATS[config.format.container]?.label || config.format.container)}
+        ${chip(`${FORMATS[config.format.container]?.label || config.format.container} ${String(config.format.res).toUpperCase()}`)}
         ${chip(`${config.format.fps}p`)}
         ${chip(shutterLabel(config.exposure.shutter.denom))}
         ${chip(`${config.room.mainsHz}Hz mains`)}

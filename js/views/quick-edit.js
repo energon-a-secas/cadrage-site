@@ -8,7 +8,7 @@
 // needs no matching handler.
 
 import { escHtml } from '../utils.js';
-import { FORMATS, fpsFor, modesAtFps, CHROMA_LABELS } from '../data/bodies.js';
+import { FORMATS, fpsFor, modesAtFps, resFor, withStored, CHROMA_LABELS, RES_LABELS } from '../data/bodies.js';
 import { LENSES } from '../data/lenses.js';
 import { PICTURE_PROFILES, GAMMAS, LOG_MODES } from '../data/gammas.js';
 import { SHUTTER_STEPS } from '../engine/calc.js';
@@ -131,6 +131,7 @@ function exposureGroup(c) {
 }
 
 function formatGroup(c) {
+  const sizes = resFor(c.format.container);
   const rates = fpsFor(c.format.container, c.format.res);
   const modes = modesAtFps(c.format.container, c.format.res, c.format.fps);
   const bitrates = [...new Set(modes.map(m => m.bitrate))];
@@ -141,16 +142,20 @@ function formatGroup(c) {
       options: Object.entries(FORMATS).map(([id, f]) => ({ value: id, label: `${f.label} (${f.codec})` })),
     }),
     select({
+      path: 'format.res', label: 'Size', value: c.format.res,
+      options: withStored(sizes.map(r => ({ value: r, label: RES_LABELS[r] || r })), c.format.res, String(c.format.res).toUpperCase()),
+    }),
+    select({
       path: 'format.fps', label: 'Frame rate', value: c.format.fps,
-      options: rates.map(r => ({ value: r, label: `${r}p` })),
+      options: withStored(rates.map(r => ({ value: r, label: `${r}p` })), c.format.fps, `${c.format.fps}p`),
     }),
     select({
       path: 'format.bitrate', label: 'Bitrate', value: c.format.bitrate,
-      options: (bitrates.length ? bitrates : [c.format.bitrate]).map(b => ({ value: b, label: `${b}M` })),
+      options: withStored(bitrates.map(b => ({ value: b, label: `${b}M` })), c.format.bitrate, `${c.format.bitrate}M`),
     }),
     select({
       path: 'format.chroma', label: 'Sampling', value: c.format.chroma,
-      options: (chromas.length ? chromas : [c.format.chroma]).map(ch => ({ value: ch, label: CHROMA_LABELS[ch] || ch })),
+      options: withStored(chromas.map(ch => ({ value: ch, label: CHROMA_LABELS[ch] || ch })), c.format.chroma, CHROMA_LABELS[c.format.chroma] || c.format.chroma),
     }),
     select({
       path: 'format.card', label: 'Card', value: c.format.card,

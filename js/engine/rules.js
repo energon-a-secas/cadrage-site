@@ -7,7 +7,7 @@
 import { flicker, isSelectableStep, spillFalloff, depthOfField, SHUTTER_STEPS } from './calc.js';
 import { PICTURE_PROFILES, GAMMAS, effectiveGamma, logForcesPpOff, BASE_ISO_CLAIMS } from '../data/gammas.js';
 import { LENSES } from '../data/lenses.js';
-import { isValidMode, modesAtFps, fpsFor, CHROMA_LABELS, FORMATS } from '../data/bodies.js';
+import { FORMAT_RULES } from './rules/format.js';
 
 export const AREAS = {
   exposure: 'Exposure',
@@ -434,51 +434,8 @@ export const RULES = [
     },
   },
 
-  // ── Format ─────────────────────────────────────────────────
-  {
-    id: 'format/invalid-combination',
-    area: 'format',
-    severity: 'error',
-    basis: 'sony-spec',
-    title: 'That recording mode does not exist',
-    learn: 'codecs-and-bitrates',
-    applies: c => !!(c.format.container && c.format.fps && c.format.bitrate && c.format.chroma),
-    test: c => {
-      const { container, res, fps, bitrate, chroma } = c.format;
-      if (isValidMode(container, res, fps, bitrate, chroma)) {
-        return { fires: false, detail: `${FORMATS[container].label} ${res.toUpperCase()} ${fps}p ${bitrate}M ${CHROMA_LABELS[chroma]} is a documented mode.` };
-      }
-      const atFps = modesAtFps(container, res, fps);
-      const rates = fpsFor(container, res);
-      const alt = atFps.length
-        ? `At ${fps}p this container offers ${atFps.map(m => `${m.bitrate}M ${CHROMA_LABELS[m.chroma]}`).join(', ')}.`
-        : `${FORMATS[container].label} ${res.toUpperCase()} has no ${fps}p option at all; it offers ${rates.join('p, ')}p.`;
-      return {
-        fires: true,
-        detail: `${FORMATS[container].label} ${res.toUpperCase()} at ${fps}p, ${bitrate}M, ${CHROMA_LABELS[chroma]} is not in Sony's Record Setting table. ${alt}`,
-      };
-    },
-  },
-  {
-    id: 'format/embed-lut-locked-on-sd',
-    area: 'format',
-    severity: 'note',
-    basis: 'unverified',
-    title: 'Embed LUT File is another body\'s row',
-    learn: 'luts',
-    applies: c => c.colour.embedLut === true,
-    test: c => {
-      const card = c.format.card;
-      const caveat = 'The a6700 help guide lists no Embed LUT File row anywhere in its menu (checked 2026-08-28). The row and its SD/SDHC lock are documented for the FX line, which is why this rule is unverified here rather than Sony spec.';
-      if (card === 'sdxc' || card === 'cfexpress') {
-        return { fires: false, detail: `Card type would support embedding on the bodies that have the row. ${caveat}` };
-      }
-      return {
-        fires: true,
-        detail: `On the bodies that have the row, Sony locks Embed LUT File to Off for SD and SDHC cards, so footage arrives in the editor without the LUT that made it look right on the camera. ${caveat}`,
-      };
-    },
-  },
+  // ── Format: js/engine/rules/format.js ──────────────────────
+  ...FORMAT_RULES,
 
   // ── Inert settings ─────────────────────────────────────────
   {

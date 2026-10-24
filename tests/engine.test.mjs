@@ -8,7 +8,7 @@ import { loadPreset, blank, fromPartial } from '../js/data/presets.js';
 import { lint, applyFix, unverifiedSkips } from '../js/engine/lint.js';
 import { RULES } from '../js/engine/rules.js';
 import { flicker, isSelectableStep, depthOfField, spillFalloff, cardMinutes, equivalence } from '../js/engine/calc.js';
-import { isValidMode } from '../js/data/bodies.js';
+import { isValidMode, fpsFor, resFor, withStored, FORMATS, BODIES } from '../js/data/bodies.js';
 import { effectiveGamma, PICTURE_PROFILES } from '../js/data/gammas.js';
 
 let pass = 0;
@@ -106,6 +106,27 @@ ok('valid mode raises no finding', fires(turntable, 'format/invalid-combination'
 ok('invalid mode raises a finding',
   fires(edit(turntable, c => { c.format.container = 'xavc-s'; }), 'format/invalid-combination'), true);
 
+// XAVC S-I: Intra, 4:2:2 10bit only, one bitrate per frame rate.
+ok('XAVC S-I 4K 60p 600M 4:2:2 10bit is valid', isValidMode('xavc-s-i', '4k', 60, 600, '422-10'), true);
+ok('XAVC S-I 4K 50p runs at 500M, not 600M', isValidMode('xavc-s-i', '4k', 50, 600, '422-10'), false);
+ok('XAVC S-I HD 24p 89M 4:2:2 10bit is valid', isValidMode('xavc-s-i', 'hd', 24, 89, '422-10'), true);
+ok('XAVC S-I has no 4:2:0 rows', isValidMode('xavc-s-i', '4k', 60, 600, '420-10'), false);
+ok('XAVC S-I has no 120p', fpsFor('xavc-s-i', '4k').includes(120), false);
+ok('XAVC S HD 120p 100M 4:2:0 8bit is valid', isValidMode('xavc-s', 'hd', 120, 100, '420-8'), true);
+ok('XAVC HS records no HD', resFor('xavc-hs'), ['4k']);
+ok('the a6700 lists every container that has rows', BODIES.a6700.formats, Object.keys(FORMATS));
+ok('a valid S-I HD mode raises no finding',
+  fires(edit(turntable, c => { Object.assign(c.format, { container: 'xavc-s-i', res: 'hd', bitrate: 222 }); }), 'format/invalid-combination'), false);
+{
+  const hd = lint(edit(turntable, c => { c.format.res = 'hd'; })).findings.find(x => x.id === 'format/invalid-combination');
+  ok('XAVC HS HD is named as off the File Format list', /XAVC HS in 4K only/.test(hd?.detail || ''), true);
+  const si = lint(edit(turntable, c => { c.format.container = 'xavc-s-i'; })).findings.find(x => x.id === 'format/invalid-combination');
+  ok('S-I at the HS bitrate points at the 600M row', /offers 600M 4:2:2 10bit/.test(si?.detail || ''), true);
+}
+ok('a stored value outside the table stays selectable',
+  withStored([{ value: 600, label: '600M' }], 100, '100M').map(o => o.label), ['600M', '100M (not offered)']);
+ok('an offered value adds nothing', withStored([{ value: 600, label: '600M' }], 600, '600M').length, 1);
+
 // ── The unverified claim stays off ───────────────────────────
 {
   const logLow = edit(turntable, c => {
@@ -199,6 +220,7 @@ for (const rule of RULES) {
 
 // ── Calculators ──────────────────────────────────────────────
 near('100M fills a 128GB card in about 159 minutes', cardMinutes({ bitrate: 100, cardGb: 128 }).minutes, 158.7, 1);
+near('XAVC S-I 600M fills it in about 26 (Sony: 25)', cardMinutes({ bitrate: 600, cardGb: 128 }).minutes, 26.45, 0.5);
 {
   const eq = equivalence({ aperture: 1.8, shutterDenom: 120, iso: 800 }, { shutterDenom: 100 });
   ok('1/120 to 1/100 is a gain of light', eq.deltaStops < 0, true);

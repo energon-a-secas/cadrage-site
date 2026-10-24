@@ -17,7 +17,7 @@
 // Room, lens and post fields deliberately have no rows: they exist in no
 // camera menu, and pretending otherwise is how notes drift from reality.
 
-import { FORMATS, CHROMA_LABELS, fpsFor, modesAtFps } from './bodies.js';
+import { FORMATS, CHROMA_LABELS, RES_LABELS, fpsFor, modesAtFps, resFor, withStored } from './bodies.js';
 import { LOG_MODES, PICTURE_PROFILES, GAMMAS, COLOR_MODE_LABELS } from './gammas.js';
 import { SHUTTER_STEPS } from '../engine/calc.js';
 
@@ -77,15 +77,27 @@ export const MENU = [
         items: [
           {
             id: 'file-format', label: 'File Format',
-            value: c => FORMATS[c.format.container]?.label || c.format.container,
-            controls: [sel('format.container', Object.entries(FORMATS).map(([id, f]) => ({ value: id, label: `${f.label} (${f.codec})` })))],
+            value: c => `${FORMATS[c.format.container]?.label || c.format.container} ${String(c.format.res).toUpperCase()}`,
+            controls: [
+              sel('format.container', Object.entries(FORMATS).map(([id, f]) => ({ value: id, label: `${f.label} (${f.codec})` }))),
+              {
+                ...sel('format.res', []),
+                options: c => withStored(resFor(c.format.container).map(r => ({ value: r, label: RES_LABELS[r] || r })),
+                  c.format.res, String(c.format.res).toUpperCase()),
+              },
+            ],
             sid: 'format',
             rules: ['format/invalid-combination'],
+            note: 'The body lists container and size as one choice (XAVC HS 4K, XAVC S 4K, XAVC S HD, XAVC S-I 4K, XAVC S-I HD). Here they are two selects, and the sizes follow the container.',
           },
           {
             id: 'frame-rate', label: 'Frame Rate',
             value: c => `${c.format.fps}p`,
-            controls: [{ ...sel('format.fps', []), options: c => fpsFor(c.format.container, c.format.res).map(f => ({ value: f, label: `${f}p` })) }],
+            controls: [{
+              ...sel('format.fps', []),
+              options: c => withStored(fpsFor(c.format.container, c.format.res).map(f => ({ value: f, label: `${f}p` })),
+                c.format.fps, `${c.format.fps}p`),
+            }],
             sid: 'format',
             rules: ['format/invalid-combination'],
             note: 'The rates on offer depend on the File Format above, exactly as on the body.',
@@ -96,18 +108,18 @@ export const MENU = [
             controls: [
               {
                 ...sel('format.bitrate', []),
-                options: c => [...new Set(modesAtFps(c.format.container, c.format.res, c.format.fps).map(m => m.bitrate))]
-                  .map(b => ({ value: b, label: `${b}M` })),
+                options: c => withStored([...new Set(modesAtFps(c.format.container, c.format.res, c.format.fps).map(m => m.bitrate))]
+                  .map(b => ({ value: b, label: `${b}M` })), c.format.bitrate, `${c.format.bitrate}M`),
               },
               {
                 ...sel('format.chroma', []),
-                options: c => [...new Set(modesAtFps(c.format.container, c.format.res, c.format.fps).map(m => m.chroma))]
-                  .map(ch => ({ value: ch, label: CHROMA_LABELS[ch] || ch })),
+                options: c => withStored([...new Set(modesAtFps(c.format.container, c.format.res, c.format.fps).map(m => m.chroma))]
+                  .map(ch => ({ value: ch, label: CHROMA_LABELS[ch] || ch })), c.format.chroma, CHROMA_LABELS[c.format.chroma] || c.format.chroma),
               },
             ],
             sid: 'format',
             rules: ['format/invalid-combination'],
-            note: 'XAVC HS has no 8-bit rows at all, and no 4K 30p. An impossible combination is named as one rather than silently kept.',
+            note: 'XAVC HS has no 8-bit rows at all, and no 4K 30p; XAVC S-I has one 4:2:2 10bit row per frame rate. An impossible combination is named as one, marked not offered, rather than silently kept.',
           },
         ],
       },

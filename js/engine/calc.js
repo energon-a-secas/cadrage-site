@@ -235,7 +235,7 @@ export function cardMinutes({ bitrate, cardGb = 128, fps = null }) {
     bitrate, cardGb, usableGb, fps,
     minutes: seconds / 60,
     gbPerMinute: (bitrate * 60) / 8 / 1000,
-    note: 'Assumes formatted capacity around 93% of the sticker figure and a constant bitrate. Long-GOP modes vary with scene complexity.',
+    note: 'Assumes formatted capacity around 93% of the sticker figure and a constant bitrate. Sony notes the camera records at a variable bit rate, so fast motion shortens the real time.',
   };
 }
 

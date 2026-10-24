@@ -41,7 +41,7 @@ export const SHOOTING_TAB = {
       {
         id: 'file-format', label: 'File Format', modes: 'both',
         ref: 'file-format',
-        doc: 'The movie container. XAVC HS is HEVC and always 10-bit; XAVC S is AVC with wider editor support.',
+        doc: 'The movie container and size: XAVC HS 4K, XAVC S 4K, XAVC S HD, XAVC S-I 4K or XAVC S-I HD. XAVC HS is HEVC and always 10-bit; XAVC S is AVC with wider editor support. Both compress groups of frames (Long GOP). XAVC S-I uses Intra compression, every frame on its own, which Sony calls more suitable for editing: 4:2:2 10-bit only, and Sony lists an SDXC V90 card or faster for it.',
         note: 'Printed with the movie icon prefix; TOC renders it as "File Format (movie)". Row is marked with the still/movie/S&Q icon, so it is displayed in every dial position.',
       },
       {
@@ -63,6 +63,7 @@ export const SHOOTING_TAB = {
       },
       {
         id: 's-q-settings', label: 'S&Q Settings', modes: 'movie',
+        doc: 'Frame rate and Record Setting for slow and quick motion, recorded in the File Format set above. Sony rules out 120fps/100fps with XAVC S-I 4K, and offers 240fps/200fps only with XAVC S HD.',
         note: 'Printed with the S&Q icon prefix.',
       },
       {
@@ -76,6 +77,7 @@ export const SHOOTING_TAB = {
       },
       {
         id: 'proxy-settings', label: 'Proxy Settings', modes: 'movie',
+        doc: 'Records a low-bitrate proxy file beside the movie. Sony says the camera cannot record one in the XAVC S-I format, or at 120p/100p.',
         note: 'Printed with the proxy icon prefix.',
       },
       {

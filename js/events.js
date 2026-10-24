@@ -10,7 +10,7 @@ import { cameraCursor, selectItem, cameraKey } from './views/camera.js';
 import { WALK_BY_ID } from './data/walkthroughs.js';
 import { lint, applyFix } from './engine/lint.js';
 import { RULE_BY_ID } from './engine/rules.js';
-import { setToolValue, patchToolOutputs } from './views/tools.js';
+import { setToolValue, patchToolOutputs, loadToolFromSetup } from './views/tools.js';
 import { showToast, debounce } from './utils.js';
 
 // ── Modal (inherited from the template) ──────────────────────
@@ -277,6 +277,16 @@ function onClick(e) {
   const fixBtn = e.target.closest('[data-fix]');
   if (fixBtn) {
     applyFindingFix(fixBtn.dataset.fix);
+    return;
+  }
+
+  // A calculator seeded from the setup on request, not kept in sync with it.
+  const loadBtn = e.target.closest('[data-tool-load]');
+  if (loadBtn) {
+    const config = activeConfig();
+    loadToolFromSetup(loadBtn.dataset.toolLoad, config);
+    render();
+    showToast(`Format taken from ${config.label}`);
     return;
   }
 

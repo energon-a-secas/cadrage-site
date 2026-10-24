@@ -20,6 +20,9 @@ export const state = {
   prefs: {
     coc: '4k',
     cardGb: 128,
+    cardBus: 'uhs-i',
+    cardUhs: 'u3',
+    cardVideo: 'v30',
     showPassed: false,
     seenIntro: false,
   },

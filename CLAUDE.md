@@ -18,7 +18,7 @@ make test    # tests/engine.test.mjs + tests/content.test.mjs
 
 ## Sections
 
-Five routes, built around one setup object: **Learn** (24 lessons, basics to advanced, six tracks) · **Walkthrough** (ordered video and photo passes; video steps can write into the setup) · **Camera** (the a6700 menu replica, 280 rows) · **Review** (the 26-rule lint) · **Calculators**. Old routes `menu`, `post`, `profiles` are aliases.
+Five routes, built around one setup object: **Learn** (25 lessons, basics to advanced, six tracks) · **Walkthrough** (ordered video and photo passes; video steps can write into the setup) · **Camera** (the a6700 menu replica, 280 rows) · **Review** (the 26-rule lint) · **Calculators**. Old routes `menu`, `post`, `profiles` are aliases.
 
 ## Architecture
 
@@ -32,7 +32,8 @@ Five routes, built around one setup object: **Learn** (24 lessons, basics to adv
 | `js/data/walkthroughs.js` | `WALKTHROUGHS` (13 video + 11 photo steps), `stepsForTrack`, `phasesForTrack` |
 | `js/views/camera.js` | the replica: cursor (`state.camera`), keyboard model, tile grid, detail card |
 | `js/views/learn.js` / `walkthrough.js` | index + lesson page; track pages + step cards |
-| `js/views/review.js` / `quick-edit.js` / `tools.js` | the review page, its quick editor, the five calculators (the card one reads `FORMATS`) |
+| `js/views/review.js` / `quick-edit.js` / `tools.js` | the review page, its quick editor, the five calculators (the card one matches a card to a format) |
+| `js/data/cards.js` | Sony's card per File Format and shooting mode (`CARD_FLOORS`, six tables), Sony's recordable times, and the SD Association's speed marks, buses and capacity standards |
 | `js/engine/interactions.js`, `calc.js`, `lint.js` | which settings the camera reads; the arithmetic; the runner |
 
 Contracts between these are frozen in the root repo's `docs/plans/2026-08-22-rigcheck-rework.md` and held by `tests/content.test.mjs` (1,100+ assertions: every `learn`, `menu`, `ref`, `link`, `lesson` and `set[].path` reference must resolve).
@@ -41,7 +42,7 @@ Vendored from `packages/neorgon-ui/`: never edit in place, run the sync script i
 
 ## Data
 
-Storage keys (all `cadrage-*`): `configs`, `active`, `prefs`, `progress` (lesson ids and `walk:<stepId>`), `rules-enabled`.
+Storage keys (all `cadrage-*`): `configs`, `active`, `prefs` (includes the card you own: `cardGb`, `cardBus`, `cardUhs`, `cardVideo`), `progress` (lesson ids and `walk:<stepId>`), `rules-enabled`.
 
 ## Conventions
 
@@ -60,6 +61,7 @@ Storage keys (all `cadrage-*`): `configs`, `active`, `prefs`, `progress` (lesson
 - **File Format is a container plus a size.** The body lists XAVC HS 4K, XAVC S 4K, XAVC S HD, XAVC S-I 4K and XAVC S-I HD as one choice; the setup stores `format.container` and `format.res`, and the size select offers the keys of `FORMATS[container].modes`. So every size Sony lists needs its rows, or the invalid-combination rule calls a real mode impossible. XAVC S-I is Intra and its bitrate follows the frame rate, so its 60p and 50p are separate rows.
 - **Format selects keep a stored value the table lacks**, labelled "(not offered)" by `withStored` in `bodies.js`. Without it the select shows its first option while the setup holds another, and a lone offered row (every XAVC S-I frame rate has one) looks chosen and can never be picked.
 - **Setup-tab rows ignore the dial.** Their transcription `modes` meant "acts on", so the generator moved it to `actsOn` and forced `modes: 'both'`. Filter Setup by mode and rows will wrongly vanish.
+- **Sony's card table and a card's marks can disagree, and the card tool shows both.** Sony gives one class per File Format and shooting mode, sized for the format's top bitrate, and nothing lower for lower Record Settings: V60 for XAVC HS 4K, while a V30 card's 30 MB/s covers 100M (12.5 MB/s). Never compress that into a single pass or fail, and never derive a Sony requirement from the arithmetic. The SDA matches marks within one family only, so V30 does not formally answer Sony's U3.
 - Camera keyboard: arrows move, Enter descends, Escape ascends; legacy key names (`Down`, `Esc`) are normalised in events.js because automation and old engines send them.
 
 ## Do not touch

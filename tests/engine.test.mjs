@@ -7,8 +7,9 @@
 import { loadPreset, blank, fromPartial } from '../js/data/presets.js';
 import { lint, applyFix, unverifiedSkips } from '../js/engine/lint.js';
 import { RULES } from '../js/engine/rules.js';
-import { flicker, isSelectableStep, depthOfField, spillFalloff, cardMinutes, equivalence } from '../js/engine/calc.js';
-import { isValidMode, fpsFor, resFor, withStored, FORMATS, BODIES } from '../js/data/bodies.js';
+import { flicker, isSelectableStep, depthOfField, spillFalloff, cardMinutes, cardMatch, equivalence } from '../js/engine/calc.js';
+import { isValidMode, fpsFor, modesAtFps, resFor, withStored, FORMATS, BODIES } from '../js/data/bodies.js';
+import { CARD_FLOORS, SONY_RECORD_TIMES, sonyRecordTime } from '../js/data/cards.js';
 import { effectiveGamma, PICTURE_PROFILES } from '../js/data/gammas.js';
 
 let pass = 0;
@@ -225,6 +226,58 @@ near('XAVC S-I 600M fills it in about 26 (Sony: 25)', cardMinutes({ bitrate: 600
   const eq = equivalence({ aperture: 1.8, shutterDenom: 120, iso: 800 }, { shutterDenom: 100 });
   ok('1/120 to 1/100 is a gain of light', eq.deltaStops < 0, true);
   ok('...offset by lowering ISO', eq.compensate.iso < 800, true);
+}
+
+// ── Memory cards: Sony's table and the SDA's marks ───────────
+{
+  const v30 = { gb: 128, bus: 'uhs-i', uhs: 'u3', video: 'v30' };
+  const v60 = { gb: 128, bus: 'uhs-ii', uhs: 'u3', video: 'v60' };
+  const at = (fmt = {}, card = v30, extra = {}) =>
+    cardMatch({ container: 'xavc-hs', res: '4k', fps: 60, bitrate: 100, card, ...fmt, ...extra });
+  const hs = at();
+  ok('Sony lists V60 for XAVC HS 4K movies', hs.floor.mark, 'v60');
+  ok('a V30 card is below it', hs.meetsSony, false);
+  ok('...yet 30 MB/s covers 100M at 12.5 MB/s', [hs.streamMBs, hs.rateCovered], [12.5, true]);
+  ok('a V60 UHS-II card meets it', at({}, v60).meetsSony, true);
+  ok('V60 on a UHS-I card is no such card', at({}, { ...v60, bus: 'uhs-i' }).noSuchCard, true);
+  const si = at({ container: 'xavc-s-i', bitrate: 600 }, v60);
+  ok('XAVC S-I 4K wants V90', si.floor.mark, 'v90');
+  ok('600M outruns a V60 floor at 75 MB/s', [si.streamMBs, si.rateCovered], [75, false]);
+  ok('a 32 GB SDHC card is off the list for 4K', at({}, { ...v30, gb: 32 }).mediaOk, false);
+  ok('...but XAVC S HD takes SDHC', at({ container: 'xavc-s', res: 'hd', bitrate: 50 }, { ...v30, gb: 32 }).meetsSony, true);
+  const vOnly = at({ container: 'xavc-s', res: 'hd', bitrate: 50 }, { gb: 128, bus: 'uhs-i', video: 'v30' });
+  ok('V30 without U3 is not the U3 Sony names', [vOnly.markOk, vOnly.otherFamily], [false, true]);
+  ok('S&Q wants V90 at Sony\'s 500 Mbps maximum', [at({ mode: 'sq' }).floor.mark, at({ mode: 'sq' }).streamMbps], ['v90', 500]);
+  ok('time-lapse wants U3 and states no rate', [at({ mode: 'timelapse' }).floor.mark, at({ mode: 'timelapse' }).streamMbps], ['u3', null]);
+  ok('a proxy adds 16 Mbps', at({}, v30, { proxy: true }).streamMbps, 116);
+  ok('no proxy in XAVC S-I', at({ container: 'xavc-s-i', bitrate: 600 }, v30, { proxy: true }).reason, 'no-proxy-intra');
+  ok('no proxy at 120p', at({ fps: 120, bitrate: 280 }, v30, { proxy: true }).reason, 'no-proxy-high-rate');
+  ok('a card with no speed mark covers nothing', at({}, { gb: 128, bus: 'uhs-i' }).rateCovered, false);
+  ok('Sony lists 2 h 10 min for 100M on 128 GB',
+    sonyRecordTime({ container: 'xavc-hs', res: '4k', fps: 60, bitrate: 100, cardGb: 128 }), 130);
+  ok('Sony lists no 256 GB times', sonyRecordTime({ container: 'xavc-hs', res: '4k', fps: 60, bitrate: 100, cardGb: 256 }), null);
+}
+
+// Every card row names a real File Format, every File Format has its rows,
+// and every Sony record time is a mode the camera offers.
+for (const [mode, byProxy] of Object.entries(CARD_FLOORS)) {
+  for (const [proxy, rows] of Object.entries(byProxy)) {
+    for (const key of Object.keys(rows)) {
+      const [container, res] = key.split('/');
+      ok(`card row ${mode}/${proxy}/${key} is a File Format`, resFor(container).includes(res), true);
+    }
+  }
+}
+for (const [container, f] of Object.entries(FORMATS)) {
+  for (const res of Object.keys(f.modes)) {
+    for (const mode of Object.keys(CARD_FLOORS)) {
+      ok(`Sony lists a ${mode} card for ${container}/${res}`, !!CARD_FLOORS[mode].off[`${container}/${res}`], true);
+    }
+  }
+}
+for (const r of SONY_RECORD_TIMES) {
+  ok(`Sony record time ${r.container} ${r.res} ${r.bitrate}M is a real mode`,
+    r.fps.every(f => modesAtFps(r.container, r.res, f).some(m => m.bitrate === r.bitrate)), true);
 }
 
 // ── Report ───────────────────────────────────────────────────

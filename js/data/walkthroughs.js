@@ -59,7 +59,7 @@ XAVC HS is HEVC: every mode is 10-bit and the files are smaller for the same qua
     track: 'video', phase: 'Format', title: 'Pick bitrate and chroma',
     menuId: 'record-setting', lesson: 'codecs-and-bitrates', tool: 'card',
     why: `
-Inside a frame rate the remaining knobs are bitrate and chroma sampling. 10-bit 4:2:2 holds up under grading and keying; 8-bit is fine straight out of camera and fragile the moment you push it. An impossible combination is named as one rather than silently kept, the same check the Review runs. The card calculator turns the bitrate into minutes per card before you commit.`,
+Inside a frame rate the remaining knobs are bitrate and chroma sampling. 10-bit 4:2:2 holds up under grading and keying; 8-bit is fine straight out of camera and fragile the moment you push it. An impossible combination is named as one rather than silently kept, the same check the Review runs. The card calculator turns the bitrate into minutes per card, and checks your card against the one Sony lists, before you commit.`,
     set: [],
   },
   {

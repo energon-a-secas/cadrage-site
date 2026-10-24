@@ -26,7 +26,7 @@ const SUBTITLES = {
   walkthrough: 'The camera, in the order decisions depend on each other',
   camera: 'The a6700 menu, as the body shows it',
   review: 'What contradicts what',
-  tools: 'Shutter, depth of field, spill, equivalence, card time',
+  tools: 'Shutter, depth of field, spill, equivalence, cards',
 };
 
 const VIEWS = {

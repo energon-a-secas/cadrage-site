@@ -2,24 +2,29 @@
 // Five standalone what-if tools over engine/calc.js. They do not read the
 // stored setup: the review already judges that, these exist for questions
 // the setup does not answer ("what if the venue is 60Hz", "what does
-// stopping down buy"). Inputs live in the static shell and are never
-// re-rendered on keystroke; only the `#out-*` blocks patch, so a field
-// never loses the caret while you type. Selects re-render the view,
-// because the card calculator's Record Setting options depend on the
-// File Format and frame rate chosen above them.
+// stopping down buy"). The one exception is asked for: the card tool's
+// "Use the active setup" copies the setup's format in, once. Inputs live
+// in the static shell and are never re-rendered on keystroke; only the
+// `#out-*` blocks patch, so a field never loses the caret while you type.
+// Selects re-render the view, because the card calculator's Record
+// Setting options depend on the File Format and frame rate chosen above.
 //
 // Two knobs are shared with the rest of the app on purpose: the circle of
-// confusion preset and the card size are preferences, not per-question
-// inputs, so they read from and write to state.prefs.
+// confusion preset and the card you own (capacity, bus, speed marks) are
+// preferences, not per-question inputs, so they live in state.prefs.
 
 import { escHtml, $ } from '../utils.js';
 import { state, savePrefs } from '../state.js';
 import { panel, kvRows, basisChip } from '../ui.js';
 import {
-  flicker, depthOfField, spillFalloff, equivalence, cardMinutes,
+  flicker, depthOfField, spillFalloff, equivalence, cardMinutes, cardMatch,
   SHUTTER_STEPS, COC_PRESETS,
 } from '../engine/calc.js';
 import { FORMATS, fpsFor, modesAtFps, resFor, CHROMA_LABELS, RES_LABELS } from '../data/bodies.js';
+import {
+  SPEED_MARKS, CARD_BUSES, CARD_SIZES_GB, CAPACITY_STANDARDS, SHOOT_MODES,
+  capacityStandard, floorLabel, sizeLabel, sonyRecordTime,
+} from '../data/cards.js';
 import { LENSES } from '../data/lenses.js';
 
 const DEFAULTS = {
@@ -27,7 +32,7 @@ const DEFAULTS = {
   dof: { lensId: 'zeiss-55-1.8', aperture: 1.8, distanceCm: 60 },
   spill: { fromCm: 5, toCm: 50, widthCm: 150 },
   equiv: { aperture: 1.8, denom: 120, iso: 800, field: 'denom', to: 100 },
-  card: { container: 'xavc-hs', res: '4k', fps: 60, bitrate: 100 },
+  card: { container: 'xavc-hs', res: '4k', fps: 60, bitrate: 100, mode: 'movie', proxy: 'off' },
 };
 
 /** Session-local inputs, seeded from the defaults on first render. */
@@ -37,6 +42,9 @@ function inputs(tool) {
   if (!toolState[tool]) toolState[tool] = { ...DEFAULTS[tool] };
   return toolState[tool];
 }
+
+/** The card you own, kept beside cardGb in prefs. */
+const CARD_PREFS = ['cardBus', 'cardUhs', 'cardVideo'];
 
 /** Called from events.js for any `[data-tool]` control. */
 export function setToolValue(tool, key, raw, kind) {
@@ -49,7 +57,19 @@ export function setToolValue(tool, key, raw, kind) {
   // Shared preferences live in prefs, not in the per-tool bag.
   if (tool === 'dof' && key === 'coc') { state.prefs.coc = String(raw); savePrefs(); return; }
   if (tool === 'card' && key === 'cardGb') { state.prefs.cardGb = Number(raw); savePrefs(); return; }
+  if (tool === 'card' && CARD_PREFS.includes(key)) { state.prefs[key] = raw || null; savePrefs(); return; }
   inputs(tool)[key] = value;
+}
+
+/**
+ * Called from events.js: copy the active setup's format into the card
+ * tool. The setup records neither S&Q nor a proxy, so both go back to
+ * the plain movie row.
+ */
+export function loadToolFromSetup(tool, config) {
+  if (tool !== 'card') return;
+  const { container, res, fps, bitrate } = config.format;
+  Object.assign(inputs('card'), { container, res, fps, bitrate, mode: 'movie', proxy: 'off' });
 }
 
 /**
@@ -112,8 +132,9 @@ const CALCS = [
     blurb: 'What moving the subject off the backdrop buys. A broad flat source does not follow inverse-square at short range, so the answer is a range.' },
   { id: 'equiv', title: 'Exposure equivalence', learn: 'iso-and-exposure',
     blurb: 'One setting changes; what has to move to hold the same exposure, and by how much.' },
-  { id: 'card', title: 'Record time per card', learn: 'codecs-and-bitrates',
-    blurb: 'Bitrate against formatted capacity. Long enough to matter is shorter than the sticker suggests.' },
+  { id: 'card', title: 'Card for a format', learn: 'memory-cards', basis: ['sony-spec', 'physics'], grouped: true,
+    blurb: 'Which card Sony lists for a File Format, what your card\'s marks promise, and how long each size lasts. The two answers can disagree, so both are shown.',
+    actions: '<button type="button" class="btn btn--secondary btn--sm" data-tool-load="card">Use the active setup</button>' },
 ];
 
 export function renderTools() {
@@ -131,9 +152,10 @@ export function renderTools() {
 function calcPanel(c) {
   return panel({
     title: c.title,
-    lead: `${escHtml(c.blurb)} ${basisChip('physics')} <a class="btn btn--ghost btn--sm" href="#/learn/${c.learn}">Read the lesson</a>`,
+    lead: `${escHtml(c.blurb)} ${(c.basis || ['physics']).map(basisChip).join(' ')} <a class="btn btn--ghost btn--sm" href="#/learn/${c.learn}">Read the lesson</a>`,
+    actions: c.actions || '',
     body: `
-      <div class="calc-fields">${INPUTS[c.id]()}</div>
+      <div class="calc-fields${c.grouped ? ' calc-fields--grouped' : ''}">${INPUTS[c.id]()}</div>
       <div class="calc-out" id="out-${c.id}">${OUTPUTS[c.id]()}</div>`,
     id: `calc-${c.id}`,
   });
@@ -195,7 +217,10 @@ const INPUTS = {
     const modes = modesAtFps(s.container, s.res, s.fps);
     const bitrates = [...new Set(modes.map(m => m.bitrate))];
     if (!bitrates.includes(s.bitrate)) s.bitrate = bitrates[0] ?? null;
+    const p = state.prefs;
+    const none = { value: '', label: 'None' };
     return [
+      '<p class="calc-sub calc-fields__head">The format</p>',
       sel('card', 'container', s.container, Object.entries(FORMATS).map(([id, f]) => ({ value: id, label: f.label })), 'File Format'),
       sel('card', 'res', s.res, sizes.map(r => ({ value: r, label: RES_LABELS[r] || r })), 'Size'),
       sel('card', 'fps', s.fps, fpsList.map(f => ({ value: f, label: `${f}p` })), 'Frame rate'),
@@ -203,7 +228,13 @@ const INPUTS = {
         const chromas = [...new Set(modes.filter(m => m.bitrate === b).map(m => m.chroma))];
         return { value: b, label: `${b}M (${chromas.map(ch => CHROMA_LABELS[ch]).join(' or ')})` };
       }), 'Record Setting'),
-      sel('card', 'cardGb', state.prefs.cardGb, [64, 128, 256, 512].map(g => ({ value: g, label: `${g} GB` })), 'Card'),
+      sel('card', 'mode', s.mode, Object.entries(SHOOT_MODES).map(([value, label]) => ({ value, label })), 'Shooting'),
+      sel('card', 'proxy', s.proxy, [{ value: 'off', label: 'Off' }, { value: 'on', label: 'On' }], 'Proxy Recording'),
+      '<p class="calc-sub calc-fields__head">Your card</p>',
+      sel('card', 'cardGb', p.cardGb, CARD_SIZES_GB.map(g => ({ value: g, label: `${sizeLabel(g)} (${CAPACITY_STANDARDS[capacityStandard(g)].label})` })), 'Capacity'),
+      sel('card', 'cardBus', p.cardBus, Object.entries(CARD_BUSES).map(([value, b]) => ({ value, label: b.label })), 'Bus'),
+      sel('card', 'cardUhs', p.cardUhs ?? '', [none, ...['u1', 'u3'].map(id => ({ value: id, label: SPEED_MARKS[id].label }))], 'UHS Speed Class'),
+      sel('card', 'cardVideo', p.cardVideo ?? '', [none, ...['v10', 'v30', 'v60', 'v90'].map(id => ({ value: id, label: SPEED_MARKS[id].label }))], 'Video Speed Class'),
     ].join('');
   },
 };
@@ -212,6 +243,39 @@ const INPUTS = {
 
 const x = v => (v >= 10 ? v.toFixed(0) : v >= 1 ? v.toFixed(1) : v.toFixed(2)) + 'x';
 const stopFmt = v => `${v > 0 ? '+' : ''}${v.toFixed(2)} stops`;
+const mbs = v => (Number.isInteger(v) ? String(v) : v.toFixed(1));
+const MODE_PHRASES = { movie: 'movie recording', sq: 'S&Q Motion', timelapse: 'time-lapse' };
+
+/** Minutes as "2h 38m", rounding the total first so 59.6 never prints as 60m. */
+function duration(minutes) {
+  const total = Math.round(minutes);
+  const h = Math.floor(total / 60);
+  const m = total % 60;
+  return h ? (m ? `${h}h ${m}m` : `${h}h`) : `${total} min`;
+}
+
+/**
+ * Minutes on every size, by division and from Sony's own table where it
+ * has the row. Movie recording only: in S&Q and time-lapse the shooting
+ * time and the movie length differ, on settings this tool does not model.
+ */
+function recordTimes(s, m, card, proxy) {
+  if (s.mode !== 'movie') {
+    return `<p class="calc-note">Record time is not worked out for ${escHtml(SHOOT_MODES[s.mode])}: shooting time and movie length differ there, and depend on frame rate or interval settings this tool does not model.</p>`;
+  }
+  const rows = CARD_SIZES_GB.map(gb => {
+    const standard = capacityStandard(gb);
+    const r = cardMinutes({ bitrate: m.streamMbps, cardGb: gb });
+    const sony = proxy ? null : sonyRecordTime({ container: s.container, res: s.res, fps: s.fps, bitrate: s.bitrate, cardGb: gb });
+    const mine = m.floor.media.includes(standard) ? duration(r.minutes) : 'off Sony\'s list';
+    return `<tr${gb === card.gb ? ' class="is-current"' : ''}><th scope="row">${sizeLabel(gb)} ${CAPACITY_STANDARDS[standard].label}</th><td>${mine}</td><td>${sony === null ? 'not listed' : duration(sony)}</td></tr>`;
+  }).join('');
+  const r = cardMinutes({ bitrate: m.streamMbps, cardGb: card.gb });
+  return `
+    <p class="calc-sub">Record time at ${m.streamMbps} Mbps${proxy ? ', proxy included' : ''}, ${r.gbPerMinute.toFixed(2)} GB per minute:</p>
+    <table class="calc-table"><thead><tr><th>Card</th><th>By division</th><th>Sony's table</th></tr></thead><tbody>${rows}</tbody></table>
+    <p class="calc-note">${escHtml(r.note)} Sony tabulates 64 and 128 GB only, with Proxy Recording off, and its figures run below the division.</p>`;
+}
 
 const OUTPUTS = {
   flicker() {
@@ -315,19 +379,59 @@ const OUTPUTS = {
 
   card() {
     const s = inputs('card');
-    const r = cardMinutes({ bitrate: s.bitrate, cardGb: state.prefs.cardGb, fps: s.fps });
-    if (!r.ok) return '<p class="calc-warn">Pick a record setting.</p>';
-    const hours = Math.floor(r.minutes / 60);
-    const mins = Math.round(r.minutes % 60);
-    const span = hours ? `${hours}h ${mins}m` : `${mins} minutes`;
+    const p = state.prefs;
+    const card = { gb: p.cardGb, bus: p.cardBus, uhs: p.cardUhs, video: p.cardVideo };
+    const proxy = s.proxy === 'on';
+    const name = `${FORMATS[s.container].label} ${String(s.res).toUpperCase()}`;
+    const m = cardMatch({ container: s.container, res: s.res, fps: s.fps, bitrate: s.bitrate, mode: s.mode, proxy, card });
+    if (!m.ok) {
+      const why = {
+        'no-proxy-intra': 'Sony: the camera cannot record a proxy in the XAVC S-I format, so Sony lists no card for it. Set Proxy Recording to Off.',
+        'no-proxy-high-rate': `Sony: proxy recording is not available at ${s.fps}p. Set Proxy Recording to Off, or pick a lower frame rate.`,
+      }[m.reason] || `Sony's card table has no row for ${name} in ${SHOOT_MODES[s.mode]}.`;
+      return `<p class="calc-warn">${escHtml(why)}</p>`;
+    }
+    const where = `${name} ${MODE_PHRASES[s.mode]}${proxy ? ' with a proxy' : ''}`;
+    const want = `<strong>${escHtml(floorLabel(m.floor))}</strong>`;
+    const std = CAPACITY_STANDARDS[m.standard];
+    const marks = m.marks.join(' ');
+    const theCard = m.marks.length ? `a ${marks} card promises ${m.promisedMBs} MB/s` : 'a card with no speed mark promises no minimum';
+    const rate = m.streamMBs === null ? null : `${mbs(m.streamMBs)} MB/s`;
+
+    let verdict;
+    if (!m.mediaOk) {
+      verdict = `<p class="calc-verdict is-bad">Off Sony's list: a ${sizeLabel(card.gb)} card is ${std.label}, and for ${escHtml(where)} Sony lists ${want}.</p>`;
+    } else if (m.meetsSony) {
+      verdict = `<p class="calc-verdict is-good">Meets the card Sony lists for ${escHtml(where)}: ${want}.</p>`;
+    } else if (m.rateCovered) {
+      verdict = `<p class="calc-verdict">Below the card Sony lists for ${escHtml(where)} (${want}), but this card's own floor covers the setting: it writes ${rate}, and ${escHtml(theCard)}.</p>`;
+    } else if (m.rateCovered === false) {
+      verdict = `<p class="calc-verdict is-bad">Below the card Sony lists for ${escHtml(where)} (${want}), and below this setting's rate too: it writes ${rate}, and ${escHtml(theCard)}.</p>`;
+    } else {
+      verdict = `<p class="calc-verdict">Below the card Sony lists for ${escHtml(where)} (${want}). Sony states no bitrate for time-lapse, so there is no rate to weigh the card against.</p>`;
+    }
+
+    const notes = [];
+    if (m.noSuchCard) notes.push(['warn', `No such card: the SD Association puts V60 and V90 only on UHS-II and UHS-III cards, so a UHS-I card cannot carry ${SPEED_MARKS[card.video].label}. Check for the II on the label.`]);
+    if (m.mediaOk && !m.markOk && m.otherFamily) notes.push(['note', `Sony names ${SPEED_MARKS[m.floor.mark].label} here. ${marks} promises the same speed under another SD Association family, and the SDA only counts a match within one family, so check the label for ${SPEED_MARKS[m.floor.mark].label} as well.`]);
+    // The gap only exists below the bitrate Sony sized the card for.
+    if (m.mediaOk && !m.markOk && s.mode === 'movie' && s.bitrate < m.floor.maxMbps) notes.push(['note', `Sony gives one card per File Format and shooting mode, sized for the format's highest bitrate (${m.floor.maxMbps} Mbps${proxy ? ' plus a 16 Mbps proxy' : ''}), and lists nothing lower for lower Record Settings.`]);
+    if (s.mode === 'sq') notes.push(['note', 'Sony: in slow motion the recording bitrate is higher than usual, so the rate here is Sony\'s S&Q maximum for the format, not the Record Setting.']);
+    if (m.standard === 'sdhc') notes.push(['note', 'Sony: on an SDHC card a long XAVC S recording is split into 4 GB files, and a time-lapse stops just before the split.']);
+
+    const bus = CARD_BUSES[card.bus];
     const rows = [
-      ['Record time', span],
-      ['Data rate', `${r.gbPerMinute.toFixed(2)} GB per minute`],
-      ['Usable capacity assumed', `${r.usableGb.toFixed(0)} GB of the ${state.prefs.cardGb} GB sticker`],
+      ['Sony lists', `${escHtml(floorLabel(m.floor))}${m.floor.maxMbps ? `, for up to ${m.floor.maxMbps} Mbps${proxy ? ' plus a 16 Mbps proxy' : ''}` : ''}`],
+      ['This setting writes', m.streamMbps === null ? 'no rate stated by Sony for time-lapse' : `${m.streamMbps} Mbps, ${rate}${s.mode === 'sq' ? ' (Sony\'s S&Q maximum)' : ''}`],
+      ['Your card promises', m.marks.length ? `${m.promisedMBs} MB/s minimum sequential write (${escHtml(m.marks.join(', '))})` : 'no minimum write speed: no speed mark chosen'],
+      ['Capacity standard', `${std.label}: ${std.range}, ${std.fs}`],
+      ['Bus', `${bus.label}, ${bus.ceiling}. The a6700 takes UHS-I and UHS-II.`],
     ];
+
     return `
-      <p class="calc-verdict">${escHtml(FORMATS[s.container].label)} ${escHtml(String(s.res).toUpperCase())} ${s.fps}p at ${s.bitrate}M fills a ${state.prefs.cardGb}GB card in <strong>${span}</strong>.</p>
+      ${verdict}
+      ${notes.map(([kind, text]) => `<p class="calc-${kind}">${escHtml(text)}</p>`).join('')}
       ${kvRows(rows)}
-      <p class="calc-note">${escHtml(r.note)}</p>`;
+      ${recordTimes(s, m, card, proxy)}`;
   },
 };

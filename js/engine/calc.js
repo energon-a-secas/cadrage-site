@@ -3,6 +3,7 @@
 // finding can show the arithmetic instead of asserting a number.
 
 import { BODIES, ACTUAL_FPS } from '../data/bodies.js';
+import { CARD_FLOORS, SPEED_MARKS, capacityStandard } from '../data/cards.js';
 
 /** Shutter denominators the camera offers in 1/3-stop steps. */
 export const SHUTTER_STEPS = [
@@ -236,6 +237,52 @@ export function cardMinutes({ bitrate, cardGb = 128, fps = null }) {
     minutes: seconds / 60,
     gbPerMinute: (bitrate * 60) / 8 / 1000,
     note: 'Assumes formatted capacity around 93% of the sticker figure and a constant bitrate. Sony notes the camera records at a variable bit rate, so fast motion shortens the real time.',
+  };
+}
+
+// ── Card match ───────────────────────────────────────────────
+
+/**
+ * Does a card suit a recording format? Sony's table and the card's own
+ * promise are answered separately, because they can disagree: a V30
+ * card is below the V60 Sony lists for XAVC HS 4K, yet its 30 MB/s floor
+ * covers a 100M Record Setting (12.5 MB/s) with room to spare.
+ */
+export function cardMatch({ container, res, fps, bitrate, mode = 'movie', proxy = false, card = {} }) {
+  if (proxy && container === 'xavc-s-i') return { ok: false, reason: 'no-proxy-intra' };
+  if (proxy && (fps === 120 || fps === 100)) return { ok: false, reason: 'no-proxy-high-rate' };
+  const floor = CARD_FLOORS[mode]?.[proxy ? 'on' : 'off']?.[`${container}/${res}`];
+  if (!floor) return { ok: false, reason: 'no-floor' };
+
+  const standard = capacityStandard(card.gb);
+  const mediaOk = floor.media.includes(standard);
+  const want = SPEED_MARKS[floor.mark];
+  const marks = [card.uhs, card.video].map(id => SPEED_MARKS[id]).filter(Boolean);
+  // The SDA's matching rule: same family, same or higher number.
+  const kin = marks.find(m => m.family === want.family);
+  const markOk = !!kin && kin.mbs >= want.mbs;
+  const promisedMBs = marks.length ? Math.max(...marks.map(m => m.mbs)) : 0;
+
+  // What the card has to keep up with: the Record Setting in movie mode,
+  // Sony's stated maximum in S&Q (the rate rises in slow motion), and
+  // nothing for time-lapse, where Sony states no rate.
+  const proxyMbps = proxy ? floor.proxyMbps || 0 : 0;
+  const streamMbps = mode === 'movie' ? bitrate + proxyMbps
+    : mode === 'sq' ? floor.maxMbps + proxyMbps : null;
+  const streamMBs = streamMbps === null ? null : streamMbps / 8;
+
+  return {
+    ok: true,
+    floor, standard, mediaOk, markOk,
+    meetsSony: mediaOk && markOk,
+    // Sony's speed under a different SDA family (V30 where Sony names U3),
+    // which the SDA does not count as a match.
+    otherFamily: !kin && promisedMBs >= want.mbs,
+    marks: marks.map(m => m.label),
+    promisedMBs,
+    noSuchCard: card.bus === 'uhs-i' && marks.some(m => m.uhsTwoOnly),
+    streamMbps, streamMBs,
+    rateCovered: streamMBs === null ? null : promisedMBs >= streamMBs,
   };
 }
 

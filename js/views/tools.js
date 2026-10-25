@@ -13,7 +13,7 @@
 // confusion preset and the card you own (capacity, bus, speed marks) are
 // preferences, not per-question inputs, so they live in state.prefs.
 
-import { escHtml, $ } from '../utils.js';
+import { escHtml } from '../utils.js';
 import { state, savePrefs } from '../state.js';
 import { panel, kvRows, basisChip } from '../ui.js';
 import {
@@ -78,7 +78,8 @@ export function loadToolFromSetup(tool, config) {
  */
 export function patchToolOutputs() {
   for (const c of CALCS) {
-    const box = $(`out-${c.id}`);
+    // Fresh lookups: every full render replaces these blocks.
+    const box = document.getElementById(`out-${c.id}`);
     if (box) box.innerHTML = OUTPUTS[c.id]();
   }
 }

@@ -13,6 +13,7 @@ import { interactions, lensLabel } from '../engine/interactions.js';
 import { flicker } from '../engine/calc.js';
 import { AREAS } from '../engine/rules.js';
 import { FORMATS } from '../data/bodies.js';
+import { cardLabel } from '../data/cards.js';
 import { basisChip, chip, panel, findingCard, kvRows, emptyState } from '../ui.js';
 import { quickEditPanel } from './quick-edit.js';
 
@@ -61,6 +62,7 @@ function configBar(config) {
       <div class="config-bar__meta">
         ${chip(`${FORMATS[config.format.container]?.label || config.format.container} ${String(config.format.res).toUpperCase()}`)}
         ${chip(`${config.format.fps}p`)}
+        ${config.format.cardUhs || config.format.cardVideo ? chip(cardLabel({ standard: config.format.card, uhs: config.format.cardUhs, video: config.format.cardVideo })) : ''}
         ${chip(shutterLabel(config.exposure.shutter.denom))}
         ${chip(`${config.room.mainsHz}Hz mains`)}
         ${chip(lensLabel(config))}

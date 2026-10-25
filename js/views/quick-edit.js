@@ -9,6 +9,7 @@
 
 import { escHtml } from '../utils.js';
 import { FORMATS, fpsFor, modesAtFps, resFor, withStored, CHROMA_LABELS, RES_LABELS } from '../data/bodies.js';
+import { SPEED_MARKS, CARD_BUSES } from '../data/cards.js';
 import { LENSES } from '../data/lenses.js';
 import { PICTURE_PROFILES, GAMMAS, LOG_MODES } from '../data/gammas.js';
 import { SHUTTER_STEPS } from '../engine/calc.js';
@@ -130,6 +131,8 @@ function exposureGroup(c) {
   ].join(''));
 }
 
+const notRecorded = { value: '', label: 'not recorded' };
+
 function formatGroup(c) {
   const sizes = resFor(c.format.container);
   const rates = fpsFor(c.format.container, c.format.res);
@@ -164,7 +167,20 @@ function formatGroup(c) {
         { value: 'sdhc', label: 'SDHC' },
         { value: 'sd', label: 'SD' },
       ],
-      hint: 'On the FX bodies that have the embed row, SD and SDHC lock it off.',
+      hint: 'Sony lists SDHC for XAVC S HD movies and some time-lapse rows; every other row wants SDXC.',
+    }),
+    select({
+      path: 'format.cardBus', label: 'Card bus', value: c.format.cardBus,
+      options: [notRecorded, ...Object.entries(CARD_BUSES).map(([value, b]) => ({ value, label: b.label }))],
+    }),
+    select({
+      path: 'format.cardUhs', label: 'UHS mark', value: c.format.cardUhs,
+      options: [notRecorded, ...['u1', 'u3'].map(id => ({ value: id, label: SPEED_MARKS[id].label }))],
+    }),
+    select({
+      path: 'format.cardVideo', label: 'Video mark', value: c.format.cardVideo,
+      options: [notRecorded, ...['v10', 'v30', 'v60', 'v90'].map(id => ({ value: id, label: SPEED_MARKS[id].label }))],
+      hint: 'As printed on the card. V60 and V90 exist only on UHS-II cards.',
     }),
   ].join(''));
 }

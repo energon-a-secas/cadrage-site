@@ -13,7 +13,12 @@ export function blank() {
     note: '',
     body: 'a6700',
     lens: { id: 'other', aperture: 2.8, focalMm: null },
-    format: { container: 'xavc-hs', res: '4k', fps: 24, bitrate: 100, chroma: '422-10', card: 'sdxc' },
+    // card is the capacity standard; the bus and speed marks are what the
+    // label shows, null until recorded, so the card rules sit out.
+    format: {
+      container: 'xavc-hs', res: '4k', fps: 24, bitrate: 100, chroma: '422-10',
+      card: 'sdxc', cardBus: null, cardUhs: null, cardVideo: null,
+    },
     exposure: {
       iso: { mode: 'manual', value: 800, min: null, max: null },
       shutter: { mode: 'manual', denom: 50 },
@@ -84,7 +89,7 @@ export const PRESETS = [
     label: 'Turntable 55mm',
     note: 'Product on a motorised turntable against a green backdrop, 55mm prime, tripod. Picture Profile rather than Log, corrected further in CapCut.',
     lens: { id: 'zeiss-55-1.8', aperture: 1.8 },
-    format: { container: 'xavc-hs', res: '4k', fps: 60, bitrate: 100, chroma: '422-10' },
+    format: { container: 'xavc-hs', res: '4k', fps: 60, bitrate: 100, chroma: '422-10', cardUhs: 'u3', cardVideo: 'v30' },
     exposure: {
       iso: { mode: 'auto', value: null, min: 250, max: 800 },
       shutter: { mode: 'auto', denom: 120 },

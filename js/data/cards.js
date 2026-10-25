@@ -38,12 +38,19 @@ export const sizeLabel = gb => (gb >= 1000 ? `${gb / 1000} TB` : `${gb} GB`);
 
 /** SD Association capacity standards. */
 export const CAPACITY_STANDARDS = {
+  sd: { label: 'SD', range: 'up to 2 GB', fs: 'FAT12 or FAT16' },
   sdhc: { label: 'SDHC', range: 'over 2 GB up to 32 GB', fs: 'FAT32' },
   sdxc: { label: 'SDXC', range: 'over 32 GB up to 2 TB', fs: 'exFAT' },
 };
 
 export function capacityStandard(gb) {
   return gb <= 32 ? 'sdhc' : 'sdxc';
+}
+
+/** "SDXC U3 V30": a card the way its label reads, skipping what is not recorded. */
+export function cardLabel({ standard = null, uhs = null, video = null }) {
+  return [CAPACITY_STANDARDS[standard]?.label, SPEED_MARKS[uhs]?.label, SPEED_MARKS[video]?.label]
+    .filter(Boolean).join(' ');
 }
 
 export const SHOOT_MODES = {

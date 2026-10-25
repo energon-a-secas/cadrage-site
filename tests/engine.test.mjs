@@ -258,6 +258,25 @@ near('XAVC S-I 600M fills it in about 26 (Sony: 25)', cardMinutes({ bitrate: 600
   ok('Sony lists no 256 GB times', sonyRecordTime({ container: 'xavc-hs', res: '4k', fps: 60, bitrate: 100, cardGb: 256 }), null);
 }
 
+// The setup's card: Sony's list as a note, the card's own floor as a warning.
+ok('turntable records a U3 V30 card', [turntable.format.cardUhs, turntable.format.cardVideo], ['u3', 'v30']);
+ok('below Sony\'s V60 is flagged on the real config', fires(turntable, 'format/card-below-sony-list'), true);
+ok('...but 30 MB/s covers 100M, so no rate warning', fires(turntable, 'format/card-slower-than-stream'), false);
+{
+  const f = lint(turntable).findings.find(x => x.id === 'format/card-below-sony-list');
+  ok('the note states both answers', /SDXC V60 or higher/.test(f.detail) && /covers this Record Setting/.test(f.detail), true);
+  ok('...as a note, not a fault', f.severity, 'note');
+}
+ok('a V60 card meets Sony\'s list', fires(edit(turntable, c => { c.format.cardVideo = 'v60'; }), 'format/card-below-sony-list'), false);
+ok('a U1 card falls behind 100M',
+  fires(edit(turntable, c => { c.format.cardUhs = 'u1'; c.format.cardVideo = null; }), 'format/card-slower-than-stream'), true);
+ok('XAVC S-I 600M outruns a V60 card',
+  fires(edit(turntable, c => { Object.assign(c.format, { container: 'xavc-s-i', bitrate: 600, cardVideo: 'v60' }); }), 'format/card-slower-than-stream'), true);
+ok('SDHC is off Sony\'s list for 4K at any speed',
+  fires(edit(turntable, c => { Object.assign(c.format, { card: 'sdhc', cardVideo: 'v60' }); }), 'format/card-below-sony-list'), true);
+ok('no marks recorded, both card rules sit out',
+  [fires(blank(), 'format/card-below-sony-list'), fires(blank(), 'format/card-slower-than-stream')], [false, false]);
+
 // Every card row names a real File Format, every File Format has its rows,
 // and every Sony record time is a mode the camera offers.
 for (const [mode, byProxy] of Object.entries(CARD_FLOORS)) {

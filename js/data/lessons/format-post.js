@@ -80,7 +80,7 @@ S&Q Motion raises the bitrate, up to 560 Mbps for XAVC S 4K, and with Proxy Reco
 
 Sony sizes each card for the format's highest bitrate and lists nothing lower for lower Record Settings, which leaves a gap worth stating plainly. XAVC HS 4K at 100M writes 12.5 MB/s. A V30 card promises 30 MB/s, more than twice that, and the turntable setup records exactly this on a V30 card without trouble. It is still below the V60 Sony lists for the format. Both statements are true, and they answer different questions: the card's floor covers this Record Setting, while Sony's table, read as written, asks for more.
 
-The margin is arithmetic, so it moves with the bitrate. At 200M the stream is 25 MB/s and the V30 margin is down to 5 MB/s. At 120p, 280M is 35 MB/s, past what V30 promises. The **Card for a format** calculator runs this check for any File Format, frame rate and card.
+The margin is arithmetic, so it moves with the bitrate. At 200M the stream is 25 MB/s and the V30 margin is down to 5 MB/s. At 120p, 280M is 35 MB/s, past what V30 promises. The **Card for a format** calculator runs this check for any File Format, frame rate and card. The Review reads a setup's recorded card the same way: a note when it sits below Sony's listing, and a separate warning only when its marks promise less than the Record Setting writes.
 
 ### Capacity and record time
 

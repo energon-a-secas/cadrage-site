@@ -30,7 +30,7 @@ Review camera settings to find the ones that contradict each other, do nothing, 
 
 ## Overview
 
-Cadrage teaches one camera properly instead of every camera vaguely. Learn the exposure triangle and focus from basics to advanced, walk through a video or photo setup step by step, and do it all on a replica of the Sony a6700 menu transcribed from the official help guide. Underneath sits a 26-rule review that reads your whole setup (room, lens and edit included) and names the settings that contradict each other, do nothing, or get corrected twice in post, with every claim carrying its provenance.
+Cadrage teaches one camera properly instead of every camera vaguely. Learn the exposure triangle and focus from basics to advanced, walk through a video or photo setup step by step, and do it all on a replica of the Sony a6700 menu transcribed from the official help guide. Underneath sits a 28-rule review that reads your whole setup (room, lens and edit included) and names the settings that contradict each other, do nothing, or get corrected twice in post, with every claim carrying its provenance.
 
 **Live:** cadrage.neorgon.com
 
@@ -41,8 +41,8 @@ Cadrage teaches one camera properly instead of every camera vaguely. Learn the e
 - **Learn** -- 24 lessons in six tracks, basics before advanced: the exposure triangle, focus, colour, light and flicker, formats, post
 - **Walkthrough** -- ordered passes for video and photography; video steps can write their argued-for values straight into the active setup
 - **Camera** -- the a6700 menu as the body shows it: 8 tabs, 280 rows transcribed from the help guide, live controls where the setup models a row and honest documentation where it does not
-- **Review** -- 26 rules that lint the setup, each finding naming whether it rests on physics, Sony spec, convention, your notes, or nothing verifiable
-- **Calculators** -- flicker, depth of field, backdrop spill, exposure equivalence, card time
+- **Review** -- 28 rules that lint the setup, each finding naming whether it rests on physics, Sony spec, convention, your notes, or nothing verifiable
+- **Calculators** -- flicker, depth of field, backdrop spill, exposure equivalence, and which card a format needs
 
 ---
 

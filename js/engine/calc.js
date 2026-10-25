@@ -254,8 +254,9 @@ export function cardMatch({ container, res, fps, bitrate, mode = 'movie', proxy 
   const floor = CARD_FLOORS[mode]?.[proxy ? 'on' : 'off']?.[`${container}/${res}`];
   if (!floor) return { ok: false, reason: 'no-floor' };
 
-  const standard = capacityStandard(card.gb);
-  const mediaOk = floor.media.includes(standard);
+  // A setup records the capacity standard itself; the calculator, a size.
+  const standard = card.standard || (card.gb ? capacityStandard(card.gb) : null);
+  const mediaOk = standard ? floor.media.includes(standard) : null;
   const want = SPEED_MARKS[floor.mark];
   const marks = [card.uhs, card.video].map(id => SPEED_MARKS[id]).filter(Boolean);
   // The SDA's matching rule: same family, same or higher number.
@@ -274,7 +275,7 @@ export function cardMatch({ container, res, fps, bitrate, mode = 'movie', proxy 
   return {
     ok: true,
     floor, standard, mediaOk, markOk,
-    meetsSony: mediaOk && markOk,
+    meetsSony: mediaOk !== false && markOk,
     // Sony's speed under a different SDA family (V30 where Sony names U3),
     // which the SDA does not count as a match.
     otherFamily: !kin && promisedMBs >= want.mbs,

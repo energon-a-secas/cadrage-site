@@ -18,13 +18,13 @@ make test    # tests/engine.test.mjs + tests/content.test.mjs
 
 ## Sections
 
-Five routes, built around one setup object: **Learn** (25 lessons, basics to advanced, six tracks) · **Walkthrough** (ordered video and photo passes; video steps can write into the setup) · **Camera** (the a6700 menu replica, 280 rows) · **Review** (the 26-rule lint) · **Calculators**. Old routes `menu`, `post`, `profiles` are aliases.
+Five routes, built around one setup object: **Learn** (25 lessons, basics to advanced, six tracks) · **Walkthrough** (ordered video and photo passes; video steps can write into the setup) · **Camera** (the a6700 menu replica, 280 rows) · **Review** (the 28-rule lint) · **Calculators**. Old routes `menu`, `post`, `profiles` are aliases.
 
 ## Architecture
 
 | Module | Owns |
 |---|---|
-| `js/engine/rules.js` | `AREAS`, `SEVERITY`, `RULES` (26, each with `learn` pointing at a lesson id); the Format area lives in `js/engine/rules/format.js` and is spread back in place |
+| `js/engine/rules.js` | `AREAS`, `SEVERITY`, `RULES` (28, each with `learn` pointing at a lesson id); the Format area lives in `js/engine/rules/format.js` and is spread back in place |
 | `js/data/menu.js` | `MENU_ITEMS`: the live-row registry (label, `value(c)`, `controls`, `sid`, `rules`) |
 | `js/data/menu-tree.js` | aggregates `js/data/tree/*.js` into `TREE` (8 tabs), `TREE_ITEMS`, `TREE_PATH`, mode filters |
 | `js/data/tree/*.js` | the transcribed a6700 menu (source: help guide, read 2026-08-28); `main.js` is the tile screen |
@@ -61,7 +61,8 @@ Storage keys (all `cadrage-*`): `configs`, `active`, `prefs` (includes the card 
 - **File Format is a container plus a size.** The body lists XAVC HS 4K, XAVC S 4K, XAVC S HD, XAVC S-I 4K and XAVC S-I HD as one choice; the setup stores `format.container` and `format.res`, and the size select offers the keys of `FORMATS[container].modes`. So every size Sony lists needs its rows, or the invalid-combination rule calls a real mode impossible. XAVC S-I is Intra and its bitrate follows the frame rate, so its 60p and 50p are separate rows.
 - **Format selects keep a stored value the table lacks**, labelled "(not offered)" by `withStored` in `bodies.js`. Without it the select shows its first option while the setup holds another, and a lone offered row (every XAVC S-I frame rate has one) looks chosen and can never be picked.
 - **Setup-tab rows ignore the dial.** Their transcription `modes` meant "acts on", so the generator moved it to `actsOn` and forced `modes: 'both'`. Filter Setup by mode and rows will wrongly vanish.
-- **Sony's card table and a card's marks can disagree, and the card tool shows both.** Sony gives one class per File Format and shooting mode, sized for the format's top bitrate, and nothing lower for lower Record Settings: V60 for XAVC HS 4K, while a V30 card's 30 MB/s covers 100M (12.5 MB/s). Never compress that into a single pass or fail, and never derive a Sony requirement from the arithmetic. The SDA matches marks within one family only, so V30 does not formally answer Sony's U3.
+- **Sony's card table and a card's marks can disagree, and both the card tool and the Review show both.** Sony gives one class per File Format and shooting mode, sized for the format's top bitrate, and nothing lower for lower Record Settings: V60 for XAVC HS 4K, while a V30 card's 30 MB/s covers 100M (12.5 MB/s). Never compress that into a single pass or fail, and never derive a Sony requirement from the arithmetic. The SDA matches marks within one family only, so V30 does not formally answer Sony's U3.
+- **The setup's card is two rules on purpose.** `format/card-below-sony-list` (sony-spec, a note) holds the recorded card against Sony's movie table with Proxy off, since the setup models neither S&Q nor a proxy; `format/card-slower-than-stream` (physics, a warning) compares the marks' MB/s with the Record Setting. The user chose, on 2026-10-25, that turntable-55's U3 V30 card shows the note. `format.card` stays the capacity standard; `cardBus`, `cardUhs` and `cardVideo` are null until recorded, and both rules sit out without a mark.
 - Camera keyboard: arrows move, Enter descends, Escape ascends; legacy key names (`Down`, `Esc`) are normalised in events.js because automation and old engines send them.
 
 ## Do not touch

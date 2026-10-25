@@ -18,7 +18,7 @@ make test    # tests/engine.test.mjs + tests/content.test.mjs
 
 ## Sections
 
-Five routes, built around one setup object: **Learn** (25 lessons, basics to advanced, six tracks) · **Walkthrough** (ordered video and photo passes; video steps can write into the setup) · **Camera** (the a6700 menu replica, 280 rows) · **Review** (the 28-rule lint) · **Calculators**. Old routes `menu`, `post`, `profiles` are aliases.
+Five routes, built around one setup object: **Learn** (26 lessons, basics to advanced, six tracks) · **Walkthrough** (ordered video and photo passes; video steps can write into the setup) · **Camera** (the a6700 menu replica, 280 rows) · **Review** (the 28-rule lint) · **Calculators**. Old routes `menu`, `post`, `profiles` are aliases.
 
 ## Architecture
 
@@ -32,7 +32,9 @@ Five routes, built around one setup object: **Learn** (25 lessons, basics to adv
 | `js/data/walkthroughs.js` | `WALKTHROUGHS` (13 video + 11 photo steps), `stepsForTrack`, `phasesForTrack` |
 | `js/views/camera.js` | the replica: cursor (`state.camera`), keyboard model, tile grid, detail card |
 | `js/views/learn.js` / `walkthrough.js` | index + lesson page; track pages + step cards |
-| `js/views/review.js` / `quick-edit.js` / `tools.js` | the review page, its quick editor, the five calculators (the card one matches a card to a format) |
+| `js/views/review.js` / `quick-edit.js` / `tools.js` | the review page, its quick editor, the six calculators (the card one matches a card to a format); `calc-fields.js` holds their shared controls |
+| `js/views/lights.js` | the sixth calculator, the lighting simulator: light cards, the plan seen from above, and the Lights in Chile panel under it |
+| `js/data/lights.js` | the lights, their figures at 1 m per modifier (maker, yours, estimate or placeholder), roles, layouts and tiers, and Chilean prices with the shop and the day each was read |
 | `js/data/cards.js` | Sony's card per File Format and shooting mode (`CARD_FLOORS`, six tables), Sony's recordable times, and the SD Association's speed marks, buses and capacity standards |
 | `js/engine/interactions.js`, `calc.js`, `lint.js` | which settings the camera reads; the arithmetic; the runner |
 
@@ -42,7 +44,7 @@ Vendored from `packages/neorgon-ui/`: never edit in place, run the sync script i
 
 ## Data
 
-Storage keys (all `cadrage-*`): `configs`, `active`, `prefs` (includes the card you own: `cardGb`, `cardBus`, `cardUhs`, `cardVideo`), `progress` (lesson ids and `walk:<stepId>`), `rules-enabled`.
+Storage keys (all `cadrage-*`): `configs`, `active`, `prefs` (includes the card you own: `cardGb`, `cardBus`, `cardUhs`, `cardVideo`; and `panelLux1m`, the PL48 panel's lux at 1 m once measured), `progress` (lesson ids and `walk:<stepId>`), `rules-enabled`.
 
 ## Conventions
 
@@ -63,6 +65,9 @@ Storage keys (all `cadrage-*`): `configs`, `active`, `prefs` (includes the card 
 - **Setup-tab rows ignore the dial.** Their transcription `modes` meant "acts on", so the generator moved it to `actsOn` and forced `modes: 'both'`. Filter Setup by mode and rows will wrongly vanish.
 - **Sony's card table and a card's marks can disagree, and both the card tool and the Review show both.** Sony gives one class per File Format and shooting mode, sized for the format's top bitrate, and nothing lower for lower Record Settings: V60 for XAVC HS 4K, while a V30 card's 30 MB/s covers 100M (12.5 MB/s). Never compress that into a single pass or fail, and never derive a Sony requirement from the arithmetic. The SDA matches marks within one family only, so V30 does not formally answer Sony's U3.
 - **The setup's card is two rules on purpose.** `format/card-below-sony-list` (sony-spec, a note) holds the recorded card against Sony's movie table with Proxy off, since the setup models neither S&Q nor a proxy; `format/card-slower-than-stream` (physics, a warning) compares the marks' MB/s with the Record Setting. The user chose, on 2026-10-25, that turntable-55's U3 V30 card shows the note. `format.card` stays the capacity standard; `cardBus`, `cardUhs` and `cardVideo` are null until recorded, and both rules sit out without a mark.
+- **The lighting simulator's figures say whose they are.** A maker's lux at 1 m is used as stated, and its 2 and 3 m figures (`table`) take over from inverse square where they reach: Godox's own table has the SL60IID reflector falling off faster than the square law. A softbox or diffuser figure is an estimate (`ESTIMATES` in `js/data/lights.js`), anchored to the pairs Aputure and amaran publish for larger lights, because no maker publishes one for these. The PL48's 800 lux is a placeholder, tuned so the Today layout reproduces the 2,000 lux of the 2026-10-24 exposure, until `prefs.panelLux1m` replaces it. Exposure is set on a card facing the camera, so each light counts by the cosine of its role's angle and a rim counts for nothing. Never quote a tier's result without the estimate behind it.
+- **Prices carry the day they were read.** Re-read the shop before changing a price or `CHECKED`; never move a date without reading the page. Mercado Libre and Ubuy block automated reading (robots.txt, a challenge page), so their prices are `seen`, shown as not re-checked, and never count toward a tier's cost.
+- **`patchToolOutputs` looks the `#out-*` blocks up fresh**, like `patchDerived`. Through the `$` cache it kept the first block it found, so after any select re-rendered the view, typing patched a detached node and the outputs froze.
 - Camera keyboard: arrows move, Enter descends, Escape ascends; legacy key names (`Down`, `Esc`) are normalised in events.js because automation and old engines send them.
 
 ## Do not touch

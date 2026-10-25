@@ -10,7 +10,7 @@ import { cameraCursor, selectItem, cameraKey } from './views/camera.js';
 import { WALK_BY_ID } from './data/walkthroughs.js';
 import { lint, applyFix } from './engine/lint.js';
 import { RULE_BY_ID } from './engine/rules.js';
-import { setToolValue, patchToolOutputs, loadToolFromSetup } from './views/tools.js';
+import { setToolValue, patchToolOutputs, loadToolFromSetup, toolAction } from './views/tools.js';
 import { showToast, debounce } from './utils.js';
 
 // ── Modal (inherited from the template) ──────────────────────
@@ -277,6 +277,17 @@ function onClick(e) {
   const fixBtn = e.target.closest('[data-fix]');
   if (fixBtn) {
     applyFindingFix(fixBtn.dataset.fix);
+    return;
+  }
+
+  // Calculator buttons that change a list: add, remove or load lights.
+  const actBtn = e.target.closest('[data-tool-act]');
+  if (actBtn) {
+    const result = toolAction(actBtn.dataset.toolAct, actBtn.dataset.act, actBtn.dataset.arg);
+    if (!result) return;
+    render();
+    if (result.focus) document.querySelector(result.focus)?.focus();
+    if (result.toast) showToast(result.toast);
     return;
   }
 

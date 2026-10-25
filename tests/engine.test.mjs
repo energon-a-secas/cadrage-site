@@ -7,7 +7,15 @@
 import { loadPreset, blank, fromPartial } from '../js/data/presets.js';
 import { lint, applyFix, unverifiedSkips } from '../js/engine/lint.js';
 import { RULES } from '../js/engine/rules.js';
-import { flicker, isSelectableStep, depthOfField, spillFalloff, cardMinutes, cardMatch, equivalence } from '../js/engine/calc.js';
+import {
+  flicker, isSelectableStep, depthOfField, spillFalloff, cardMinutes, cardMatch, equivalence,
+  illuminanceAt, tableLux, modifiedLux1m, lightMix, luxForExposure, exposureFromLux, nearestStep, ISO_STEPS, COC_PRESETS,
+} from '../js/engine/calc.js';
+import {
+  LIGHTS, LIGHT_ROLES, ACCESSORIES, SHOPS, SCENARIOS, SCENARIO_BY_ID, ESTIMATES, REFERENCE_LUX,
+  PANEL_PLACEHOLDER_LUX, resolveLight, tierCost, lowestPrice, priceLabel,
+} from '../js/data/lights.js';
+import { GAIN_STEP_MEASURED } from '../js/data/gammas.js';
 import { isValidMode, fpsFor, modesAtFps, resFor, withStored, FORMATS, BODIES } from '../js/data/bodies.js';
 import { CARD_FLOORS, SONY_RECORD_TIMES, sonyRecordTime } from '../js/data/cards.js';
 import { effectiveGamma, PICTURE_PROFILES } from '../js/data/gammas.js';
@@ -297,6 +305,147 @@ for (const [container, f] of Object.entries(FORMATS)) {
 for (const r of SONY_RECORD_TIMES) {
   ok(`Sony record time ${r.container} ${r.res} ${r.bitrate}M is a real mode`,
     r.fps.every(f => modesAtFps(r.container, r.res, f).some(m => m.bitrate === r.bitrate)), true);
+}
+
+// ── Light on a model: inverse square and broad sources ───────
+{
+  const at = cm => illuminanceAt({ lux1m: 1000, distanceCm: cm });
+  ok('a small source gives its 1 m figure at 1 m', at(100).lux, 1000);
+  near('half the distance, four times the light', at(50).lux, 4000, 1e-6);
+  near('70% of the distance doubles the light', at(70).lux / 1000, 2.04, 0.01);
+
+  const box = cm => illuminanceAt({ lux1m: 1000, distanceCm: cm, areaCm2: 60 * 60 });
+  ok('a softbox gives its 1 m figure at 1 m', Math.round(box(100).lux), 1000);
+  near('a 60 x 60 softbox at 60 cm gives 2.35x, not inverse square\'s 2.78x', box(60).lux / 1000, 2.349, 0.005);
+  near('...which is what inverse square would have promised', box(60).pointLux / 1000, 2.778, 0.005);
+  ok('up close a broad source falls off slower than a point', box(30).lux / box(60).lux < 4, true);
+  near('far away it follows inverse square again', box(500).lux / box(1000).lux, 4, 0.02);
+  ok('no figure, no answer', illuminanceAt({ lux1m: null, distanceCm: 50 }).ok, false);
+
+  near('a softbox passing half a bare 2,160 lux light gives about 969 at 1 m',
+    modifiedLux1m({ lux1m: 2160, flux: 0.5, areaCm2: 3600 }), 969, 1);
+
+  // A maker's table beats the square law where it reaches.
+  const refl = LIGHTS['godox-sl60iid'].mods.reflector;
+  const sl = cm => illuminanceAt({ lux1m: refl.lux1m, distanceCm: cm, table: refl.table });
+  ok('the SL60IID reflector gives Godox\'s 3,700 at 2 m', Math.round(sl(200).lux), 3700);
+  ok('...where inverse square from 1 m would promise 4,650', Math.round(sl(200).pointLux), 4650);
+  ok('...and it says the figure came from the table', sl(200).fromTable, true);
+  near('between the points it runs straight on log-log axes', sl(150).lux, 18600 * 1.5 ** (Math.log(3700 / 18600) / Math.log(2)), 1e-6);
+  near('closer than the table, inverse square from its first point', sl(50).lux, 74400, 1e-6);
+  const dimmed = illuminanceAt({ lux1m: refl.lux1m / 2, distanceCm: 200, table: refl.table });
+  near('the dimmer scales the table too', dimmed.lux, 1850, 1e-6);
+  const amaran = LIGHTS['amaran-60d-s'].mods.bare;
+  ok('the 60d S table starts at 50 cm: 11,550 there', Math.round(tableLux(amaran.table, 50)), 11550);
+  for (const [id, l] of Object.entries(LIGHTS)) {
+    for (const [modId, m] of Object.entries(l.mods)) {
+      if (m.table) ok(`${id}/${modId}: its table agrees with its 1 m figure`, Math.round(tableLux(m.table, 100)), m.lux1m);
+    }
+  }
+  ok('a modifier that loses nothing and keeps the area changes nothing',
+    modifiedLux1m({ lux1m: 800, flux: 1, fromAreaCm2: 1316, areaCm2: 1316 }), 800);
+}
+
+// ── Light on a model: exposure from lux ──────────────────────
+{
+  ok('f/8, 1/100, ISO 800 asks for 2,000 lux', luxForExposure({ aperture: 8, shutterDenom: 100, iso: 800 }), 2000);
+  ok('...the reference figure the simulator compares with', REFERENCE_LUX, 2000);
+  const e = exposureFromLux({ lux: 2000, aperture: 8, iso: 400, shutterDenom: 100 });
+  near('2,000 lux at f/8 asks for ISO 800', e.isoExact, 800, 1e-9);
+  ok('...800 on the dial', e.isoDial, 800);
+  near('at ISO 400 it allows f/5.66', e.apertureExact, 5.657, 0.001);
+  ok('...f/5.6 on the dial', e.apertureDial, 5.6);
+  ok('twice the light, half the ISO', exposureFromLux({ lux: 4000, aperture: 8, iso: 400, shutterDenom: 100 }).isoDial, 400);
+  ok('half the light, twice the ISO', exposureFromLux({ lux: 1000, aperture: 8, iso: 400, shutterDenom: 100 }).isoDial, 1600);
+  ok('ISO rounds in stops: 360 is nearer 400', nearestStep(360, ISO_STEPS), 400);
+  ok('...and 355 is nearer 320', nearestStep(355, ISO_STEPS), 320);
+  ok('too little light runs past ISO 32000', exposureFromLux({ lux: 10, aperture: 8, iso: 400, shutterDenom: 100 }).isoAboveRange, true);
+  ok('too much light runs under ISO 100', exposureFromLux({ lux: 1e6, aperture: 8, iso: 400, shutterDenom: 100 }).isoBelowRange, true);
+  ok('more light than f/22 needs is past the lens',
+    exposureFromLux({ lux: 100000, aperture: 8, iso: 400, shutterDenom: 100, apertureMax: 22 }).apertureAboveLens, true);
+  // The depths camera.md quotes, which the simulator takes from the same calculator.
+  const dof = n => depthOfField({ focalMm: 55, aperture: n, distanceCm: 100, cocMm: COC_PRESETS['1080p'].mm }).totalCm;
+  near('f/8 at 1 m holds 6.5 cm judged at 1080p', dof(8), 6.5, 0.05);
+  near('f/5.6 at 1 m holds 4.6 cm', dof(5.6), 4.6, 0.05);
+  ok('the measured gain step: 400 is the lowest clean ISO in Cine4', GAIN_STEP_MEASURED.cine4.lowestClean, 400);
+}
+
+// ── Light on a model: roles and the mix ──────────────────────
+{
+  const point = (angleDeg, extra = {}) => ({ lux1m: 1000, distanceCm: 100, areaCm2: 0, angleDeg, role: 'key', ...extra });
+  ok('a light beside the camera puts all of it on the card', lightMix([point(0)]).onCard, 1000);
+  near('a light at 45 degrees puts 71% on the card', lightMix([point(-45)]).onCard, 707.1, 0.1);
+  ok('a rim behind lights the model and not the card',
+    [lightMix([point(150)]).rows[0].atModel, lightMix([point(150)]).onCard], [1000, 0]);
+  ok('a light aimed at the backdrop puts nothing on the model',
+    lightMix([point(180, { aimedAway: true })]).rows[0].atModel, 0);
+  near('the dimmer scales the light', lightMix([point(0, { output: 50 })]).onCard, 500, 1e-9);
+  const two = lightMix([point(-45), point(45)]).onCard;
+  near('a third light from the front adds only half again', lightMix([point(-45), point(45), point(45)]).onCard / two, 1.5, 1e-9);
+  const mix = lightMix([point(-45, { role: 'key' }), point(45, { role: 'fill', distanceCm: 141 })]);
+  near('the fill at 1.41x the distance is half the key', mix.byRole.fill / mix.byRole.key, 0.503, 0.005);
+}
+
+// ── Light on a model: the lights and layouts ─────────────────
+{
+  const resolve = (l, panel = null) => resolveLight(l, { panelLux1m: panel });
+  const pl48 = { preset: 'pl48', mod: 'panel', role: 'key', distanceCm: 100 };
+  ok('an unmeasured PL48 uses the placeholder', [resolve(pl48).lux1m, resolve(pl48).figure], [PANEL_PLACEHOLDER_LUX, 'placeholder']);
+  ok('a measured PL48 uses your figure', [resolve(pl48, 500).lux1m, resolve(pl48, 500).figure], [500, 'yours']);
+  const box = resolve({ preset: 'godox-sl60iid', mod: 'softbox-60', role: 'key', distanceCm: 60 });
+  ok('a softbox figure is an estimate', box.figure, 'estimate');
+  near('...worked out from the bare figure', box.lux1m, modifiedLux1m({ lux1m: LIGHTS['godox-sl60iid'].mods.bare.lux1m, flux: ESTIMATES.softbox.flux, areaCm2: 3600 }), 1e-9);
+  ok('a maker figure is the maker\'s', resolve({ preset: 'godox-sl60iid', mod: 'reflector', role: 'key', distanceCm: 100 }).figure, 'maker');
+  ok('a light with no typed figure has none', resolve({ preset: 'custom', mod: 'small', role: 'key', distanceCm: 50 }).lux1m, null);
+  ok('a mod the light lacks falls back to its default', resolve({ ...pl48, mod: 'reflector' }).mod, 'panel');
+
+  const iso = id => {
+    const lights = SCENARIO_BY_ID[id].lights.map(l => resolve(l));
+    return exposureFromLux({ lux: lightMix(lights).onCard, aperture: 8, iso: 400, shutterDenom: 100 });
+  };
+  ok('today\'s guess reproduces the ISO 800 of 2026-10-24', iso('today').isoDial, 800);
+  near('...within a tenth of a stop of the 2,000 lux', Math.log2(iso('today').lux / REFERENCE_LUX), 0, 0.1);
+  ok('the free tier reaches ISO 400 at f/8', iso('free').isoDial, 400);
+  ok('diffusion spends the stop that moving closer gained', [iso('cheap').isoDial, iso('free').isoDial], [800, 400]);
+  ok('one COB in a softbox reaches ISO 400 too, by the softbox estimate', iso('best-value').isoDial, 400);
+
+  for (const [id, l] of Object.entries(LIGHTS)) {
+    ok(`${id}: its default mod exists`, !!l.mods[l.defaultMod], true);
+    for (const [modId, m] of Object.entries(l.mods)) {
+      if (m.from) ok(`${id}/${modId}: works out from a mod of its own`, !!l.mods[m.from] && !l.mods[m.from].from, true);
+      if (m.estimate) ok(`${id}/${modId}: names a known estimate`, !!ESTIMATES[m.estimate], true);
+      ok(`${id}/${modId}: has a figure or says whose it is`,
+        Number.isFinite(m.lux1m) || ['yours', 'typed'].includes(m.lux1m) || !!m.from, true);
+    }
+    for (const p of l.prices) ok(`${id}: price at a known shop`, !!SHOPS[p.shop], true);
+  }
+  for (const a of Object.values(ACCESSORIES)) {
+    for (const p of a.prices) ok(`${a.label}: priced at a known shop`, !!SHOPS[p.shop] && (p.clp > 0 || p.clp?.[0] > 0), true);
+    ok(`${a.label}: something to buy today`, lowestPrice(a.prices) > 0, true);
+  }
+  for (const sc of SCENARIOS) {
+    for (const l of sc.lights) {
+      ok(`${sc.id}: role ${l.role} exists`, !!LIGHT_ROLES[l.role], true);
+      ok(`${sc.id}: every light has a figure`, resolve(l).lux1m > 0, true);
+    }
+    if (sc.buy.length) ok(`${sc.id}: costs add up from the price lists`, tierCost(sc) > 0, true);
+  }
+  ok('best value is the COB plus its softbox', tierCost(SCENARIO_BY_ID['best-value']),
+    lowestPrice(LIGHTS['godox-sl60iid'].prices) + lowestPrice(ACCESSORIES['softbox-60'].prices));
+  ok('tier costs skip a price that cannot be bought or was not re-checked',
+    lowestPrice([{ clp: 100, out: true }, { clp: 200, seen: true }, { clp: 300 }]), 300);
+  ok('a price list with nothing to buy today has no cost', lowestPrice([{ clp: 100, out: true }]), null);
+  ok('the PL48 is free to keep: its only prices are not re-checked', lowestPrice(LIGHTS.pl48.prices), null);
+  ok('prices read as ranges and floors', [
+    priceLabel({ clp: [18000, 40000] }), priceLabel({ clp: [230000, null] }), priceLabel({ clp: 247500, about: true }),
+    priceLabel({ clp: 169990, transfer: 161830 }),
+  ], ['CLP 18,000 to 40,000', 'CLP 230,000 and up', 'about CLP 247,500', 'CLP 169,990']);
+  // The softbox estimate sits inside the published pairs for larger lights.
+  for (const id of ['softbox-60', 'softbox-90']) {
+    const box = resolve({ preset: 'godox-sl60iid', mod: id, role: 'key', distanceCm: 100 });
+    const share = box.lux1m / LIGHTS['godox-sl60iid'].mods.bare.lux1m;
+    ok(`${id}: the estimate gives ${share.toFixed(2)} of bare at 1 m, inside the published 0.36 to 0.55`, share >= 0.36 && share <= 0.55, true);
+  }
 }
 
 // ── Report ───────────────────────────────────────────────────

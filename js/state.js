@@ -23,6 +23,7 @@ export const state = {
     cardBus: 'uhs-i',
     cardUhs: 'u3',
     cardVideo: 'v30',
+    panelLux1m: null,    // the PL48 panel's lux at 1 m, once measured
     showPassed: false,
     seenIntro: false,
   },

@@ -1,5 +1,5 @@
 // ── Calculators ──────────────────────────────────────────────
-// Five standalone what-if tools over engine/calc.js. They do not read the
+// Six standalone what-if tools over engine/calc.js. They do not read the
 // stored setup: the review already judges that, these exist for questions
 // the setup does not answer ("what if the venue is 60Hz", "what does
 // stopping down buy"). The one exception is asked for: the card tool's
@@ -9,16 +9,16 @@
 // Selects re-render the view, because the card calculator's Record
 // Setting options depend on the File Format and frame rate chosen above.
 //
-// Two knobs are shared with the rest of the app on purpose: the circle of
-// confusion preset and the card you own (capacity, bus, speed marks) are
-// preferences, not per-question inputs, so they live in state.prefs.
+// Three knobs are shared with the rest of the app on purpose: the circle
+// of confusion preset, the card you own (capacity, bus, speed marks) and
+// the PL48 panel figure you measured are preferences, not per-question
+// inputs, so they live in state.prefs.
 
 import { escHtml } from '../utils.js';
 import { state, savePrefs } from '../state.js';
 import { panel, kvRows, basisChip } from '../ui.js';
 import {
-  flicker, depthOfField, spillFalloff, equivalence, cardMinutes, cardMatch,
-  SHUTTER_STEPS, COC_PRESETS,
+  flicker, depthOfField, spillFalloff, equivalence, cardMinutes, cardMatch, COC_PRESETS,
 } from '../engine/calc.js';
 import { FORMATS, fpsFor, modesAtFps, resFor, CHROMA_LABELS, RES_LABELS } from '../data/bodies.js';
 import {
@@ -26,6 +26,8 @@ import {
   capacityStandard, floorLabel, sizeLabel, sonyRecordTime,
 } from '../data/cards.js';
 import { LENSES } from '../data/lenses.js';
+import { sel, num, shutterOptions } from './calc-fields.js';
+import { LIGHT_DEFAULTS, lightInputs, lightOutputs, lightShop, lightAction } from './lights.js';
 
 const DEFAULTS = {
   flicker: { mainsHz: 50, fps: 60, denom: 120 },
@@ -33,13 +35,15 @@ const DEFAULTS = {
   spill: { fromCm: 5, toCm: 50, widthCm: 150 },
   equiv: { aperture: 1.8, denom: 120, iso: 800, field: 'denom', to: 100 },
   card: { container: 'xavc-hs', res: '4k', fps: 60, bitrate: 100, mode: 'movie', proxy: 'off' },
+  lights: LIGHT_DEFAULTS,
 };
 
 /** Session-local inputs, seeded from the defaults on first render. */
 const toolState = {};
 
 function inputs(tool) {
-  if (!toolState[tool]) toolState[tool] = { ...DEFAULTS[tool] };
+  // A deep copy: the lights default carries an array of objects.
+  if (!toolState[tool]) toolState[tool] = structuredClone(DEFAULTS[tool]);
   return toolState[tool];
 }
 
@@ -55,10 +59,27 @@ export function setToolValue(tool, key, raw, kind) {
     value = Number(raw);
   }
   // Shared preferences live in prefs, not in the per-tool bag.
-  if (tool === 'dof' && key === 'coc') { state.prefs.coc = String(raw); savePrefs(); return; }
+  if ((tool === 'dof' || tool === 'lights') && key === 'coc') { state.prefs.coc = String(raw); savePrefs(); return; }
   if (tool === 'card' && key === 'cardGb') { state.prefs.cardGb = Number(raw); savePrefs(); return; }
   if (tool === 'card' && CARD_PREFS.includes(key)) { state.prefs[key] = raw || null; savePrefs(); return; }
-  inputs(tool)[key] = value;
+  if (tool === 'lights' && key === 'panelLux1m') { state.prefs.panelLux1m = value; savePrefs(); return; }
+  // Dotted keys reach into a list: `lights.2.distanceCm`.
+  const parts = key.split('.');
+  let node = inputs(tool);
+  for (const part of parts.slice(0, -1)) {
+    if (node[part] === undefined || node[part] === null) return;
+    node = node[part];
+  }
+  node[parts[parts.length - 1]] = value;
+}
+
+/**
+ * Called from events.js for a `[data-tool-act]` button: add, remove or
+ * load lights. Returns what events.js should say and focus afterwards.
+ */
+export function toolAction(tool, act, arg) {
+  if (tool === 'lights') return lightAction(inputs('lights'), act, arg);
+  return null;
 }
 
 /**
@@ -81,45 +102,9 @@ export function patchToolOutputs() {
     // Fresh lookups: every full render replaces these blocks.
     const box = document.getElementById(`out-${c.id}`);
     if (box) box.innerHTML = OUTPUTS[c.id]();
+    const after = c.after && document.getElementById(`out-${c.after.id}`);
+    if (after) after.innerHTML = c.after.body();
   }
-}
-
-// ── Control helpers ──────────────────────────────────────────
-
-function sel(tool, key, value, options, label) {
-  const opts = options.map(o => {
-    const v = String(o.value);
-    return `<option value="${escHtml(v)}"${v === String(value) ? ' selected' : ''}>${escHtml(o.label)}</option>`;
-  }).join('');
-  return `
-    <label class="calc-field">
-      <span class="calc-field__label">${escHtml(label)}</span>
-      <select class="field__input" data-tool="${escHtml(tool)}" data-key="${escHtml(key)}" data-kind="select">${opts}</select>
-    </label>`;
-}
-
-function num(tool, key, value, label, { min, max, step = 1, unit = '' } = {}) {
-  return `
-    <label class="calc-field">
-      <span class="calc-field__label">${escHtml(label)}${unit ? ` (${escHtml(unit)})` : ''}</span>
-      <input class="field__input" type="number" data-tool="${escHtml(tool)}" data-key="${escHtml(key)}" data-kind="number"
-        value="${value === null || value === undefined ? '' : escHtml(value)}"
-        ${Number.isFinite(min) ? `min="${min}"` : ''}${Number.isFinite(max) ? ` max="${max}"` : ''} step="${step}">
-    </label>`;
-}
-
-/**
- * The 1/3-stop run, plus the current value if it is off-dial. The whole
- * point of the flicker lesson is that 1/120 can be worth analysing even
- * though the camera cannot select it, so the select must be able to show it.
- */
-function shutterOptions(current) {
-  const offDial = current && !SHUTTER_STEPS.includes(current);
-  const list = offDial ? [...SHUTTER_STEPS, current].sort((a, b) => a - b) : SHUTTER_STEPS;
-  return list.map(d => ({
-    value: d,
-    label: `1/${d}${offDial && d === current ? ' (not on the dial)' : ''}`,
-  }));
 }
 
 // ── The view ─────────────────────────────────────────────────
@@ -136,7 +121,13 @@ const CALCS = [
   { id: 'card', title: 'Card for a format', learn: 'memory-cards', basis: ['sony-spec', 'physics'], grouped: true,
     blurb: 'Which card Sony lists for a File Format, what your card\'s marks promise, and how long each size lasts. The two answers can disagree, so both are shown.',
     actions: '<button type="button" class="btn btn--secondary btn--sm" data-tool-load="card">Use the active setup</button>' },
+  { id: 'lights', title: 'Light on a turntable', learn: 'turntable-lighting', basis: ['physics', 'empirical-user'], ownFields: true,
+    blurb: 'Place lights by role around the model and see the light on it, the ISO that asks for, and the depth of field it buys. Small sources follow inverse square; panels and softboxes fall off slower up close.',
+    after: { id: 'lights-shop', title: 'Lights in Chile', body: () => lightShop(inputs('lights')),
+      lead: 'Prices as checked on the date beside each, at the shops named. They move: check before buying.' } },
 ];
+
+const ALL = 'All six calculators';
 
 export function renderTools() {
   const only = state.route.param;
@@ -144,21 +135,35 @@ export function renderTools() {
   const missing = only && !CALCS.some(c => c.id === only);
   return `
     <div class="view view--tools">
-      ${only && !missing ? `<p class="calc-back"><a class="btn btn--ghost btn--sm" href="#/tools">All five calculators</a></p>` : ''}
-      ${missing ? panel({ title: 'No such calculator', body: `<div class="empty"><p><a class="btn btn--secondary btn--sm" href="#/tools">All five calculators</a></p></div>` }) : ''}
-      ${list.map(c => calcPanel(c)).join('')}
+      ${only && !missing ? `<p class="calc-back"><a class="btn btn--ghost btn--sm" href="#/tools">${ALL}</a></p>` : ''}
+      ${missing ? panel({ title: 'No such calculator', body: `<div class="empty"><p><a class="btn btn--secondary btn--sm" href="#/tools">${ALL}</a></p></div>` }) : ''}
+      ${list.map(c => calcPanel(c) + (c.after ? afterPanel(c.after) : '')).join('')}
     </div>`;
 }
 
 function calcPanel(c) {
+  // A calculator with `ownFields` lays out its own field groups.
+  const fields = c.ownFields
+    ? INPUTS[c.id]()
+    : `<div class="calc-fields${c.grouped ? ' calc-fields--grouped' : ''}">${INPUTS[c.id]()}</div>`;
   return panel({
     title: c.title,
     lead: `${escHtml(c.blurb)} ${(c.basis || ['physics']).map(basisChip).join(' ')} <a class="btn btn--ghost btn--sm" href="#/learn/${c.learn}">Read the lesson</a>`,
     actions: c.actions || '',
     body: `
-      <div class="calc-fields${c.grouped ? ' calc-fields--grouped' : ''}">${INPUTS[c.id]()}</div>
+      ${fields}
       <div class="calc-out" id="out-${c.id}">${OUTPUTS[c.id]()}</div>`,
     id: `calc-${c.id}`,
+  });
+}
+
+/** A panel that belongs to a calculator and patches with it. */
+function afterPanel(a) {
+  return panel({
+    title: a.title,
+    lead: escHtml(a.lead),
+    body: `<div class="calc-out calc-out--plain" id="out-${a.id}">${a.body()}</div>`,
+    id: `calc-${a.id}`,
   });
 }
 
@@ -237,6 +242,9 @@ const INPUTS = {
       sel('card', 'cardUhs', p.cardUhs ?? '', [none, ...['u1', 'u3'].map(id => ({ value: id, label: SPEED_MARKS[id].label }))], 'UHS Speed Class'),
       sel('card', 'cardVideo', p.cardVideo ?? '', [none, ...['v10', 'v30', 'v60', 'v90'].map(id => ({ value: id, label: SPEED_MARKS[id].label }))], 'Video Speed Class'),
     ].join('');
+  },
+  lights() {
+    return lightInputs(inputs('lights'));
   },
 };
 
@@ -434,5 +442,9 @@ const OUTPUTS = {
       ${notes.map(([kind, text]) => `<p class="calc-${kind}">${escHtml(text)}</p>`).join('')}
       ${kvRows(rows)}
       ${recordTimes(s, m, card, proxy)}`;
+  },
+
+  lights() {
+    return lightOutputs(inputs('lights'));
   },
 };

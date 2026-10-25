@@ -38,11 +38,11 @@ Cadrage teaches one camera properly instead of every camera vaguely. Learn the e
 
 ## Features
 
-- **Learn** -- 24 lessons in six tracks, basics before advanced: the exposure triangle, focus, colour, light and flicker, formats, post
+- **Learn** -- 26 lessons in six tracks, basics before advanced: the exposure triangle, focus, colour, light and flicker, formats, post
 - **Walkthrough** -- ordered passes for video and photography; video steps can write their argued-for values straight into the active setup
 - **Camera** -- the a6700 menu as the body shows it: 8 tabs, 280 rows transcribed from the help guide, live controls where the setup models a row and honest documentation where it does not
 - **Review** -- 28 rules that lint the setup, each finding naming whether it rests on physics, Sony spec, convention, your notes, or nothing verifiable
-- **Calculators** -- flicker, depth of field, backdrop spill, exposure equivalence, and which card a format needs
+- **Calculators** -- flicker, depth of field, backdrop spill, exposure equivalence, which card a format needs, and a lighting simulator for a model on a turntable: the light each lamp puts on it, the ISO and depth of field that buys, and what the upgrades cost in Chile
 
 ---
 

@@ -159,7 +159,7 @@ Decide which side effect you cannot afford to lose, and pick the mode that locks
     summary: 'ISO is amplification, not sensitivity. Auto ISO in a take moves the exposure while you are not looking.',
     menu: ['iso', 'iso-range', 'iso-auto-min-ss'],
     tools: ['equiv'],
-    related: ['exposure-triangle', 'metering-and-compensation', 'log-vs-picture-profile'],
+    related: ['exposure-triangle', 'metering-and-compensation', 'log-vs-picture-profile', 'turntable-lighting'],
     body: `
 ISO is gain applied to what the sensor captured. Doubling ISO doubles the signal and the noise with it, so a dark scene at ISO 6400 is noisy not because 6400 is a bad number but because there was little light to amplify. The fix for noise is light; ISO is what you use when there is no more light to be had.
 

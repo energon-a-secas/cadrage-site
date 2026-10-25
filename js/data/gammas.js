@@ -156,6 +156,18 @@ export const BASE_ISO_CLAIMS = {
   },
 };
 
+/**
+ * The gain step as measured on this camera, not as claimed: an ISO ladder
+ * in Cine4 (reel-forge docs/camera.md, clips C5362 to C5367, ISO 800 down
+ * to 250 in 1/3 steps of one still scene) found it between ISO 320 and
+ * 400. Dark patches carried 42% more grain at 320 than at 400 although
+ * the picture was darker, so 400 is the lowest ISO of the cleaner stage.
+ * ISO 100 to 200 were not measured.
+ */
+export const GAIN_STEP_MEASURED = {
+  cine4: { lowestClean: 400, below: [320, 250], measured: '2026-10-24', basis: 'empirical-user' },
+};
+
 /** Does this Log mode force Picture Profile to Off? Documented, not inferred. */
 export function logForcesPpOff(logMode) {
   return logMode === 'on-flexible-iso';

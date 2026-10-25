@@ -1187,3 +1187,129 @@ html[data-chrome="off"] .nav-rail { top: 0; }
 .calc-table tbody th { color: var(--text-secondary); font-weight: 600; }
 .calc-table td { color: var(--text-secondary); }
 .calc-table tr.is-current th, .calc-table tr.is-current td { color: var(--accent-bright); }
+
+/* ── Light on a turntable ── */
+.calc-fields__wide { grid-column: 1 / -1; }
+.calc-out--plain { border-top: 0; padding-top: 0; }
+
+.light-layouts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+.light-layouts__buttons { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+
+.light-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.light-list__add { align-self: flex-start; }
+
+.light-card {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  background: var(--surface-1);
+  padding: var(--space-3) var(--space-4) var(--space-4);
+}
+.light-card__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+.light-card__name { flex: 1; font-size: var(--text-sm); font-weight: 600; color: var(--text-secondary); }
+.light-card__fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: var(--space-3);
+}
+.light-card__fields .calc-field { min-width: 0; }
+
+.light-card__num, .light-rows__num {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--bg);
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+
+/* The plan, seen from above. Colours come from the tokens so a theme
+   or a skin repaints it with the rest of the page. */
+.light-plan { margin: 0; display: flex; flex-direction: column; align-items: center; gap: var(--space-2); }
+.light-plan svg { width: 100%; max-width: 380px; height: auto; }
+.light-plan figcaption { text-align: center; max-width: 46ch; }
+.plan__table { fill: var(--surface-2); stroke: var(--border-strong); stroke-width: 1; }
+.plan__model { fill: var(--text-primary); }
+.plan__axis { stroke: var(--border-strong); stroke-width: 1; stroke-dasharray: 2 4; }
+.plan__beam { stroke: var(--accent); stroke-opacity: .4; stroke-width: 1.5; stroke-dasharray: 4 3; }
+.plan__light { fill: var(--accent-bright); }
+.plan__light--away { fill: var(--text-muted); }
+.plan__badge { fill: var(--bg); stroke: var(--accent); stroke-width: 1.2; }
+.plan__num { fill: var(--text-primary); font: 700 9px var(--font); text-anchor: middle; }
+.plan__camera { fill: var(--text-secondary); }
+.plan__label { fill: var(--text-muted); font: 10px var(--font); }
+.plan__label--end { text-anchor: end; }
+
+.light-rows { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.light-rows__row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+.light-rows__row strong { color: var(--text-primary); font-weight: 600; }
+.light-rows__tag {
+  white-space: nowrap;
+  font-size: var(--text-xs);
+  color: #fdba74;
+  border: 1px solid rgba(251, 146, 60, .4);
+  border-radius: 999px;
+  padding: 0 6px;
+}
+
+/* Lights in Chile: the tiers, then the price list. */
+.tiers { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: var(--space-3); }
+.buys { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: var(--space-3); }
+.tier, .buy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  background: var(--surface-1);
+  padding: var(--space-3) var(--space-4);
+}
+.tier__title, .buy__title {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-2);
+  margin: 0;
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.tier__price { font-size: var(--text-sm); font-weight: 600; color: var(--accent-bright); }
+.tier__blurb, .buy__kind, .buy__figures { margin: 0; font-size: var(--text-sm); line-height: 1.5; color: var(--text-secondary); }
+.tier__result { margin: 0; font-size: var(--text-xs); line-height: 1.5; color: var(--text-muted); }
+.tier .btn { align-self: flex-start; margin-top: auto; }
+.buy__prices { margin: 0; padding-left: var(--space-4); font-size: var(--text-sm); line-height: 1.5; color: var(--text-secondary); }
+.buy__date { font-size: var(--text-xs); color: var(--text-muted); }
+.buy__prices .is-out { color: var(--text-muted); }
+.buy a { color: var(--accent-bright); text-underline-offset: 2px; }
+
+@media (max-width: 600px) {
+  .light-card { padding: var(--space-3); }
+  .light-card__fields { grid-template-columns: 1fr 1fr; gap: var(--space-2) var(--space-3); }
+}

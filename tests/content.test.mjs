@@ -21,7 +21,7 @@ function ok(label, good, detail = '') {
   else failures.push(`${label}${detail ? `\n    ${detail}` : ''}`);
 }
 
-const TOOL_IDS = ['flicker', 'dof', 'spill', 'equiv', 'card'];
+const TOOL_IDS = ['flicker', 'dof', 'spill', 'equiv', 'card', 'lights'];
 
 // ── C1: lessons ──────────────────────────────────────────────
 {
@@ -103,6 +103,8 @@ const TOOL_IDS = ['flicker', 'dof', 'spill', 'equiv', 'card'];
     ...readdirSync('js/data/lessons').map(f => `js/data/lessons/${f}`),
     'js/data/lessons.js', 'js/data/walkthroughs.js', 'js/data/menu-tree.js',
     ...readdirSync('js/data/tree').map(f => `js/data/tree/${f}`),
+    // The lighting simulator is mostly prose: its data and its findings.
+    'js/data/lights.js', 'js/views/lights.js',
   ];
   const banned = ['powerful', 'seamless', 'leverages', 'robust', 'utilize'];
   for (const f of files) {

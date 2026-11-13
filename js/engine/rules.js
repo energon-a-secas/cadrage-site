@@ -4,9 +4,9 @@
 // switched off by its own inputs is not a rule, so every test reads the
 // config rather than hard-coding a verdict.
 
-import { flicker, isSelectableStep, spillFalloff, depthOfField, SHUTTER_STEPS } from './calc.js';
+import { flicker, isSelectableStep, spillFalloff, SHUTTER_STEPS } from './calc.js';
 import { PICTURE_PROFILES, GAMMAS, effectiveGamma, logForcesPpOff, BASE_ISO_CLAIMS } from '../data/gammas.js';
-import { LENSES } from '../data/lenses.js';
+import { FOCUS_RULES } from './rules/focus.js';
 import { FORMAT_RULES } from './rules/format.js';
 
 export const AREAS = {
@@ -366,73 +366,8 @@ export const RULES = [
     }),
   },
 
-  // ── Focus ──────────────────────────────────────────────────
-  {
-    id: 'focus/af-c-on-tripod',
-    area: 'focus',
-    severity: 'warn',
-    basis: 'industry-convention',
-    title: 'Continuous AF on a locked-off shot is all cost',
-    learn: 'focus-modes',
-    applies: c => c.focus.mode === 'af-c' && c.stabilisation.tripod === true,
-    test: c => {
-      const lens = LENSES[c.lens.id];
-      const quirk = lens?.quirks?.find(q => q.id === 'af-c-aperture-drift');
-      return {
-        fires: true,
-        detail: `The camera is on a tripod and focus mode is continuous. Nothing is changing distance, so AF-C has nothing to track, but it keeps evaluating, and while it evaluates it hunts. Each hunt is a visible focus shift, and on some lenses it drives aperture too, which moves exposure and colour with it.${quirk ? ` This lens is one of them: ${quirk.detail.charAt(0).toLowerCase()}${quirk.detail.slice(1)}` : ''} Focusing once with AF-S and then leaving it removes the whole class of problem.`,
-        fix: { path: 'focus.mode', to: 'af-s', label: 'Switch to AF-S' },
-      };
-    },
-  },
-  {
-    id: 'focus/dof-narrower-than-subject',
-    area: 'focus',
-    severity: 'note',
-    basis: 'physics',
-    title: 'Depth of field is thinner than the subject',
-    learn: 'depth-of-field',
-    applies: c => {
-      const lens = LENSES[c.lens.id];
-      return !!(lens?.focalMm && c.lens.aperture && c.room.subjectDistanceCm);
-    },
-    test: c => {
-      const lens = LENSES[c.lens.id];
-      // The calculator view lets you pick a circle of confusion; here the
-      // strict 4K figure is used deliberately, since the complaint that
-      // prompts this rule is pixel-level softness.
-      const dof = depthOfField({ focalMm: lens.focalMm, aperture: c.lens.aperture, distanceCm: c.room.subjectDistanceCm });
-      if (!dof.ok || dof.totalCm > 5) {
-        return { fires: false, detail: dof.ok ? `About ${dof.totalCm.toFixed(1)}cm of depth at f/${c.lens.aperture}.` : 'Not enough information.' };
-      }
-      return {
-        fires: true,
-        detail: `At ${lens.focalMm}mm, f/${c.lens.aperture}, ${c.room.subjectDistanceCm}cm away, the zone that is genuinely sharp is about ${dof.totalCm.toFixed(1)}cm deep: ${dof.inFrontCm.toFixed(1)}cm in front of the focus point and ${dof.behindCm === Infinity ? 'the rest' : `${dof.behindCm.toFixed(1)}cm`} behind. Most objects are deeper than that, so the front face and the back of the same object cannot both be sharp. Closing to f/4 or f/5.6 costs background blur and buys a subject that is sharp all the way through.`,
-      };
-    },
-  },
-  {
-    id: 'focus/mfd-vs-distance',
-    area: 'focus',
-    severity: 'error',
-    basis: 'sony-spec',
-    title: 'Subject is closer than the lens can focus',
-    learn: 'depth-of-field',
-    applies: c => {
-      const lens = LENSES[c.lens.id];
-      return !!(lens?.mfdCm && Number.isFinite(c.room.subjectDistanceCm));
-    },
-    test: c => {
-      const lens = LENSES[c.lens.id];
-      if (c.room.subjectDistanceCm >= lens.mfdCm) {
-        return { fires: false, detail: `${c.room.subjectDistanceCm}cm clears the ${lens.mfdCm}cm minimum focus distance.` };
-      }
-      return {
-        fires: true,
-        detail: `${lens.label} cannot focus closer than ${lens.mfdCm}cm, and the subject is at ${c.room.subjectDistanceCm}cm. The lens will not achieve focus at all here; it will hunt and fail. Either move back to at least ${lens.mfdCm}cm or use a lens with a shorter minimum.`,
-      };
-    },
-  },
+  // ── Focus: js/engine/rules/focus.js ────────────────────────
+  ...FOCUS_RULES,
 
   // ── Format: js/engine/rules/format.js ──────────────────────
   ...FORMAT_RULES,

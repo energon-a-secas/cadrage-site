@@ -12,13 +12,14 @@ import { state } from '../state.js';
 import { kvRows } from '../ui.js';
 import { sel, num, shutterOptions } from './calc-fields.js';
 import { lightMix, exposureFromLux, luxForExposure, depthOfField, COC_PRESETS } from '../engine/calc.js';
+import { magnificationAt, extensionStops } from '../engine/optics.js';
 import {
   LIGHTS, LIGHT_ROLES, ACCESSORIES, SHOPS, SCENARIOS, SCENARIO_BY_ID, ESTIMATES, CHECKED,
   PANEL_PLACEHOLDER_LUX, REFERENCE_EXPOSURE, REFERENCE_LUX, SHOP_NOTE,
   resolveLight, tierCost, priceLabel, clp,
 } from '../data/lights.js';
 import { GAIN_STEP_MEASURED } from '../data/gammas.js';
-import { LENSES } from '../data/lenses.js';
+import { LENSES, DISTANCE_LENS_IDS } from '../data/lenses.js';
 
 export const MAX_LIGHTS = 5;
 
@@ -40,7 +41,7 @@ function normalise(s) {
     if (!def.mods[l.mod]) l.mod = def.defaultMod;
     if (!LIGHT_ROLES[l.role]) l.role = 'key';
   }
-  if (!LENSES[s.lensId] || s.lensId === 'other') s.lensId = LIGHT_DEFAULTS.lensId;
+  if (!DISTANCE_LENS_IDS.includes(s.lensId)) s.lensId = LIGHT_DEFAULTS.lensId;
 }
 
 /** Called through tools.js for a `[data-tool-act="lights"]` button. */
@@ -69,7 +70,7 @@ export function lightAction(s, act, arg) {
 export function lightInputs(s) {
   normalise(s);
   const p = state.prefs;
-  const lenses = Object.entries(LENSES).filter(([id]) => id !== 'other').map(([value, l]) => ({ value, label: l.label }));
+  const lenses = DISTANCE_LENS_IDS.map(value => ({ value, label: LENSES[value].label }));
   return `
     <div class="light-layouts">
       <span class="calc-field__label" id="light-layouts-label">Load a layout</span>
@@ -149,6 +150,7 @@ export function lightOutputs(s) {
   const warnings = [
     ...missing(r => r.lux1m === null, 'figure at 1 m', ' Type the lux it gives at 1 m.'),
     ...missing(r => !(r.distanceCm > 0), 'distance to the model'),
+    ...(lens.mfdCm && s.cameraCm < lens.mfdCm ? [`${lens.short} cannot focus at ${s.cameraCm} cm: its minimum is ${lens.mfdCm} cm from the sensor mark. Move the camera back; Framing and close-ups shows what gets closer.`] : []),
   ];
   const figure = plan(s, mix.rows);
   if (!(mix.onCard > 0)) {
@@ -173,6 +175,11 @@ export function lightOutputs(s) {
   if (s.iso < STEP.lowestClean || (e.isoExact < STEP.lowestClean && !e.isoAboveRange)) {
     const which = s.iso < STEP.lowestClean ? `ISO ${s.iso}, the ISO you asked for,` : `ISO ${Math.round(e.isoExact)}, what this light asks for at f/${s.aperture},`;
     notes.push(['warn', `${which} sits below the gain step your ISO ladder found in Cine4 on ${STEP.measured}, between ISO 320 and 400, so ${STEP.lowestClean} is the lowest ISO of the cleaner stage. At the same light 320 and 250 measured noisier than 400, and an ISO under 400 pays only with much more light (ISO 100 wants four times the light of 400). Darken with the aperture or the dimmer, never with ISO.`]);
+  }
+  // A lens racked out for a close subject passes less light than its ring says.
+  const mag = magnificationAt(lens, s.cameraCm);
+  if (mag.ok && extensionStops(mag.m) >= 0.4) {
+    notes.push(['warn', `From ${s.cameraCm} cm the ${lens.short} is extended to ${mag.m.toFixed(2)}x, which costs about ${extensionStops(mag.m).toFixed(1)} stops that the ISO above does not count: the sensor sees f/${(s.aperture * (1 + mag.m)).toFixed(1)}, not f/${s.aperture}.`]);
   }
   notes.push(...colourNotes(mix.rows).map(t => ['note', t]));
   notes.push(...modelNotes(mix.rows).map(t => ['note', t]));
@@ -399,6 +406,7 @@ export function lightShop(s) {
       <article class="buy">
         <h3 class="buy__title">${escHtml(a.label)}</h3>
         <p class="buy__kind">${escHtml(a.kind)}</p>
+        ${a.caution ? `<p class="calc-warn">${escHtml(a.caution)}</p>` : ''}
         <ul class="buy__prices">${a.prices.map(priceItem).join('')}</ul>
       </article>`).join('');
 
@@ -411,7 +419,7 @@ export function lightShop(s) {
 }
 
 /** One shop's price: the model if the list mixes them, the shop, stock, and when it was read. */
-function priceItem(p) {
+export function priceItem(p) {
   const shop = SHOPS[p.shop];
   const where = p.url
     ? `<a href="${escHtml(p.url)}" target="_blank" rel="noopener noreferrer">${escHtml(shop.label)}</a>`

@@ -214,6 +214,11 @@ export const ACCESSORIES = {
   'softbox-60': {
     label: '60 x 60 Bowens softbox',
     kind: 'Godox SB-FW6060, with a grid. Its Bowens speed ring fits the SL60II lights and the 60d S directly.',
+    // Godox lists the SB-FW series as "Bowen's Mount, Aluminum Ring
+    // Adaptor" and the SL60II as "suitable with any Bowens-mount
+    // modifiers" (godox.com, read 2026-11-13). The kits below are the
+    // trap: one was bought for this set on 2026-11-13 and did not fit.
+    caution: 'Not the kits sold with an S or S2 speedlite bracket (Godox SFUV, SGUV, SGGV, often titled "softbox with S2 Bowens bracket"). Bowens in that title is the front of the bracket: the softbox clips over the bracket\'s rim and has no speed ring of its own, so it does not mount on a COB light.',
     prices: [
       { shop: 'apertura', clp: 49900, transfer: 47505, url: 'https://apertura.cl/godox-caja-de-luz-60x60-con-grid-softbox-montura-tipo-bowens' },
       { shop: 'godox', clp: 49900, note: 'suggested retail', url: 'https://godox.cl/producto/godox-caja-de-luz-60x60-con-grid-softbox-montura-tipo-bowens/' },

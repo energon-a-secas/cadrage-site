@@ -38,11 +38,11 @@ Cadrage teaches one camera properly instead of every camera vaguely. Learn the e
 
 ## Features
 
-- **Learn** -- 26 lessons in six tracks, basics before advanced: the exposure triangle, focus, colour, light and flicker, formats, post
+- **Learn** -- 27 lessons in six tracks, basics before advanced: the exposure triangle, focus, colour, light and flicker, formats, post
 - **Walkthrough** -- ordered passes for video and photography; video steps can write their argued-for values straight into the active setup
 - **Camera** -- the a6700 menu as the body shows it: 8 tabs, 280 rows transcribed from the help guide, live controls where the setup models a row and honest documentation where it does not
 - **Review** -- 28 rules that lint the setup, each finding naming whether it rests on physics, Sony spec, convention, your notes, or nothing verifiable
-- **Calculators** -- flicker, depth of field, backdrop spill, exposure equivalence, which card a format needs, and a lighting simulator for a model on a turntable: the light each lamp puts on it, the ISO and depth of field that buys, and what the upgrades cost in Chile
+- **Calculators** -- flicker, depth of field, backdrop spill, exposure equivalence, which card a format needs, a lighting simulator for a model on a turntable (the light each lamp puts on it, the ISO and depth of field that buys, and what the upgrades cost in Chile), and framing and close-ups: what each lens frames from where the camera stands, and what a tube, a close-up lens or a macro lens reaches, with every lens's figures from its maker
 
 ---
 
@@ -76,10 +76,10 @@ cadrage-site/
 │   ├── state.js        # Shared state, localStorage
 │   ├── render.js       # View switch, derived-zone patching
 │   ├── events.js       # Every writer: data-path, camera cursor, progress
-│   ├── engine/         # rules, interactions, calc, lint
+│   ├── engine/         # rules, interactions, calc, optics, lint
 │   ├── data/           # setup shape, live rows, menu tree, lessons, walkthroughs
 │   └── views/          # learn, walkthrough, camera, review, quick-edit, tools
-├── tests/              # engine.test.mjs + content.test.mjs (make test)
+├── tests/              # engine, optics and content tests (make test)
 ├── favicon.ico
 ├── energon-classic-logo.png
 ├── robots.txt

@@ -7,7 +7,7 @@ PORT = 8860
 help:
 	@echo ""
 	@echo "  make serve    Start dev server → http://localhost:$(PORT)"
-	@echo "  make test     Run the engine and content tests"
+	@echo "  make test     Run the engine, optics and content tests"
 	@echo "  make kill     Kill this project's HTTP server"
 	@echo ""
 
@@ -20,7 +20,7 @@ serve:
 # ── Tests ─────────────────────────────────────────────────────────────────────
 .PHONY: test
 test:
-	@node tests/engine.test.mjs && node tests/content.test.mjs
+	@node tests/engine.test.mjs && node tests/optics.test.mjs && node tests/content.test.mjs
 
 # ── Kill ──────────────────────────────────────────────────────────────────────
 .PHONY: kill

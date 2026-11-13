@@ -121,8 +121,20 @@ export const BODIES = {
   a6700: {
     label: 'Sony A6700',
     mount: 'Sony E',
-    sensor: { widthMm: 23.5, heightMm: 15.6, label: 'APS-C' },
+    // Sony's specifications give "APS-C type (23.3 x 15.5 mm)" (read
+    // 2026-11-13). The generic 23.5 x 15.6 this table carried until then
+    // drew every frame about 1% large.
+    sensor: { widthMm: 23.3, heightMm: 15.5, label: 'APS-C' },
     cropFactor: 1.53,
+    // How much of the sensor's width a movie records. Sony's help guide,
+    // "Angle of view" (read 2026-11-13): for 4K 120p/100p movies "the
+    // angle of view becomes approximately 1.6 times the focal length
+    // indicated on the lens"; every other movie gets no multiplier. Sony's
+    // own pixel counts (26.0 megapixels for stills, at most 19.9 for
+    // movies) put the movie area about 4% inside the still frame's width,
+    // which Sony does not state as a crop, so frames worked out from
+    // `base` can run up to 4% loose.
+    movieCrop: { base: 1, highRate4k: 1.6, basis: 'sony-spec' },
     iso: {
       movie: { min: 100, max: 32000, basis: 'sony-spec' },
       stills: { min: 50, max: 102400, basis: 'sony-spec' },
@@ -141,6 +153,13 @@ export const BODIES = {
     },
   },
 };
+
+/** The crop a movie takes from the sensor's width, as Sony states it: 4K at 100p and up, or none. */
+export function movieCrop(bodyId, { res = '4k', fps = null } = {}) {
+  const crop = BODIES[bodyId]?.movieCrop;
+  if (!crop) return 1;
+  return res === '4k' && fps >= 100 ? crop.highRate4k : crop.base;
+}
 
 /** Rows available for a container + resolution. */
 export function modesFor(container, res = '4k') {

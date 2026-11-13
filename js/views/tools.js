@@ -1,5 +1,5 @@
 // ── Calculators ──────────────────────────────────────────────
-// Six standalone what-if tools over engine/calc.js. They do not read the
+// Seven standalone what-if tools over engine/calc.js and engine/optics.js. They do not read the
 // stored setup: the review already judges that, these exist for questions
 // the setup does not answer ("what if the venue is 60Hz", "what does
 // stopping down buy"). The one exception is asked for: the card tool's
@@ -25,9 +25,10 @@ import {
   SPEED_MARKS, CARD_BUSES, CARD_SIZES_GB, CAPACITY_STANDARDS, SHOOT_MODES,
   capacityStandard, floorLabel, sizeLabel, sonyRecordTime,
 } from '../data/cards.js';
-import { LENSES } from '../data/lenses.js';
+import { LENSES, DISTANCE_LENS_IDS } from '../data/lenses.js';
 import { sel, num, shutterOptions } from './calc-fields.js';
 import { LIGHT_DEFAULTS, lightInputs, lightOutputs, lightShop, lightAction } from './lights.js';
+import { FRAME_DEFAULTS, frameInputs, frameOutputs, lensShop } from './lenses.js';
 
 const DEFAULTS = {
   flicker: { mainsHz: 50, fps: 60, denom: 120 },
@@ -36,6 +37,7 @@ const DEFAULTS = {
   equiv: { aperture: 1.8, denom: 120, iso: 800, field: 'denom', to: 100 },
   card: { container: 'xavc-hs', res: '4k', fps: 60, bitrate: 100, mode: 'movie', proxy: 'off' },
   lights: LIGHT_DEFAULTS,
+  frame: FRAME_DEFAULTS,
 };
 
 /** Session-local inputs, seeded from the defaults on first render. */
@@ -59,7 +61,7 @@ export function setToolValue(tool, key, raw, kind) {
     value = Number(raw);
   }
   // Shared preferences live in prefs, not in the per-tool bag.
-  if ((tool === 'dof' || tool === 'lights') && key === 'coc') { state.prefs.coc = String(raw); savePrefs(); return; }
+  if ((tool === 'dof' || tool === 'lights' || tool === 'frame') && key === 'coc') { state.prefs.coc = String(raw); savePrefs(); return; }
   if (tool === 'card' && key === 'cardGb') { state.prefs.cardGb = Number(raw); savePrefs(); return; }
   if (tool === 'card' && CARD_PREFS.includes(key)) { state.prefs[key] = raw || null; savePrefs(); return; }
   if (tool === 'lights' && key === 'panelLux1m') { state.prefs.panelLux1m = value; savePrefs(); return; }
@@ -125,9 +127,13 @@ const CALCS = [
     blurb: 'Place lights by role around the model and see the light on it, the ISO that asks for, and the depth of field it buys. Small sources follow inverse square; panels and softboxes fall off slower up close.',
     after: { id: 'lights-shop', title: 'Lights in Chile', body: () => lightShop(inputs('lights')),
       lead: 'Prices as checked on the date beside each, at the shops named. They move: check before buying.' } },
+  { id: 'frame', title: 'Framing and close-ups', learn: 'close-ups-and-magnification', basis: ['physics', 'sony-spec'], grouped: true,
+    blurb: 'What a lens frames from where the camera stands, how close it gets to a small detail, and what a tube, a close-up lens or a macro lens changes. Every step closer costs depth, and extension costs light.',
+    after: { id: 'frame-shop', title: 'Lenses and close-up options', body: () => lensShop(inputs('frame')),
+      lead: 'Your lenses and the candidates, each at its closest. Specifications are each maker\'s own, read on the date shown; prices as checked at the shops named. They move: check before buying.' } },
 ];
 
-const ALL = 'All six calculators';
+const ALL = 'All seven calculators';
 
 export function renderTools() {
   const only = state.route.param;
@@ -183,7 +189,7 @@ const INPUTS = {
   dof() {
     const s = inputs('dof');
     return [
-      sel('dof', 'lensId', s.lensId, Object.entries(LENSES).filter(([id]) => id !== 'other').map(([id, l]) => ({ value: id, label: l.label })), 'Lens'),
+      sel('dof', 'lensId', s.lensId, DISTANCE_LENS_IDS.map(id => ({ value: id, label: LENSES[id].label })), 'Lens'),
       num('dof', 'aperture', s.aperture, 'Aperture', { min: 1, max: 22, step: 0.1, unit: 'f' }),
       num('dof', 'distanceCm', s.distanceCm, 'Subject distance', { min: 5, max: 2000, unit: 'cm' }),
       sel('dof', 'coc', state.prefs.coc, Object.entries(COC_PRESETS).map(([id, p]) => ({ value: id, label: p.label })), 'Sharpness standard'),
@@ -245,6 +251,9 @@ const INPUTS = {
   },
   lights() {
     return lightInputs(inputs('lights'));
+  },
+  frame() {
+    return frameInputs(inputs('frame'));
   },
 };
 
@@ -446,5 +455,8 @@ const OUTPUTS = {
 
   lights() {
     return lightOutputs(inputs('lights'));
+  },
+  frame() {
+    return frameOutputs(inputs('frame'));
   },
 };

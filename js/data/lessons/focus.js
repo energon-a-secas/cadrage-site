@@ -131,7 +131,7 @@ A turntable shot has no recognisable subject, so recognition contributes nothing
     summary: 'Aperture, distance and focal length set a sharp zone you can compute. If it is thinner than the subject, no focus mode saves you.',
     menu: ['focus-mode'],
     tools: ['dof'],
-    related: ['aperture', 'focus-basics', 'manual-focus-aids'],
+    related: ['aperture', 'focus-basics', 'manual-focus-aids', 'close-ups-and-magnification'],
     body: `
 Depth of field is the range of distances that render acceptably sharp. Three inputs you control set it: aperture (wider is thinner), focus distance (closer is thinner), and focal length (longer is thinner at the same framing distance). The fourth input is a choice pretending to be a constant.
 
@@ -145,9 +145,52 @@ At product distances the numbers get small fast. A 55mm at f/1.8 focused at 60cm
 
 ### The floor under everything: minimum focus distance
 
-Every lens has a distance below which it cannot focus at all. The Zeiss 55mm in the lens data stops at 50cm; the 15mm G at 20cm. A subject closer than the MFD is not a focus-technique problem, and the review flags it as a contradiction rather than a warning, because no setting on the body fixes it. Distance, extension tubes, or a different lens.
+Every lens has a distance below which it cannot focus at all. The Zeiss 55mm in the lens data stops at 50cm; the 15mm G at 20cm. A subject closer than the MFD is not a focus-technique problem, and the review flags it as a contradiction rather than a warning, because no setting on the body fixes it. Distance, extension tubes, or a different lens: the lesson on getting closer works through each.
 
 Run the numbers in the **Depth of field** calculator before blaming the autofocus. Most "the camera missed" complaints at close range are a zone thinner than the subject, computed in advance and ignored.
+`,
+  },
+  {
+    id: 'close-ups-and-magnification',
+    title: 'Getting closer: magnification, and what a macro lens buys',
+    level: 'intermediate',
+    track: 'focus',
+    order: 55,
+    basis: 'physics',
+    summary: 'Every lens has a closest focus and a largest magnification. Past them it takes a tube, a close-up lens or a macro, and each costs depth and light.',
+    menu: ['focus-magnifier'],
+    tools: ['frame', 'dof'],
+    related: ['depth-of-field', 'manual-focus-aids', 'aperture'],
+    body: `
+How close a lens gets is two numbers on its specification sheet, and neither is the focal length. The minimum focus distance is where it stops focusing. The maximum magnification is how large it draws the subject there, and that is the one that decides whether a detail fills the frame.
+
+### Magnification is the number
+
+Magnification is the size of the image on the sensor over the size of the thing itself. At 0.14x, 1 cm on the subject covers 1.4 mm of sensor. The frame at the subject is the sensor divided by the magnification, so on this body's 23.3 mm wide sensor 0.14x frames about 17 cm along the long side, and 1.0x (life size, written 1:1) frames 2.3 cm.
+
+The Zeiss 55mm in the lens data stops at 50 cm and 0.14x. That is enough for a whole 18 cm model and for its upper half; a 2 cm head is an eighth of the frame's long side there, and no setting on the body changes it. The 15mm G gets to 20 cm, but a wide lens that close bends the model's proportions, so it is not a close-up lens either.
+
+### Where the distance is measured from
+
+A minimum focus distance runs from the image sensor, not from the front of the lens. The sensor's position is the small circle with a line through it on the camera's top plate. Measure from the front of a 55mm prime instead and the figure is about 9 cm out, which at 60 cm is the difference between a frame that fits the model and one that crops it. The room actually left in front of the lens is the working distance, and at high magnification it decides whether a light still reaches the subject.
+
+### Three ways past the limit
+
+- **An extension tube** is a hollow spacer between lens and body. It adds its length to the image side: with the lens at infinity the magnification is the tube's length over the focal length, so 16 mm behind a 55mm gives about 0.29x, and the lens's own close focus adds to that. No glass, so no optical cost, but the lens loses infinity: it focuses only inside a band a few centimetres deep, and you focus by moving the camera.
+- **A close-up lens** screws into the filter thread like a reading glass. Its strength is in dioptres: a +5 brings infinity in to 20 cm. It costs no light and keeps autofocus. A two-element one (an achromat) stays sharp to the corners; a single-element one fringes at the edges.
+- **A macro lens** focuses continuously from infinity to life size, and is corrected for it: a flat field, sharp at close range. It is the only one of the three that also works as a normal lens of its focal length.
+
+A fast lens is none of these. An f/1.2 prime buys light and background blur; it focuses about as close as any other standard prime, around half a metre.
+
+### What closer costs
+
+**Depth.** Depth of field falls roughly with the square of the magnification. At f/8, judged at 1080p, there is about 5 cm of it when a 55mm frames a whole model, about 3 mm at 0.3x, and about 0.4 mm at life size. That is why a detail on a turning model drifts in and out of focus: shoot close-ups with the turntable stopped, or frame a part that sits on its axis.
+
+**Light.** A lens racked out for close focus spreads its light over a larger image, so the sensor sees a smaller aperture than the ring says: the marked f-number times one plus the magnification. Life size at f/8 exposes like f/16, two stops down. A close-up lens is the exception, because it extends nothing.
+
+**Sharpness.** Diffraction follows that effective aperture too. Past about f/11 effective, a 4K frame from an APS-C sensor softens, so stopping down for depth at high magnification stops paying sooner than it does from a distance.
+
+The **Framing and close-ups** calculator runs all of this for the lenses in the table: the frame from where the camera stands, what each option reaches, and the depth and light left when it gets there.
 `,
   },
   {

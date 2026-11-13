@@ -233,7 +233,8 @@ function opticsGroup(c) {
   return group('Lens and focus', '', [
     select({
       path: 'lens.id', label: 'Lens', value: c.lens.id,
-      options: Object.entries(LENSES).map(([id, l]) => ({ value: id, label: l.label })),
+      // A macro-only lens cannot be a setup's lens: it has no subject distance to review.
+      options: Object.entries(LENSES).filter(([, l]) => !(l.minMag > 0)).map(([id, l]) => ({ value: id, label: l.label })),
     }),
     number({ path: 'lens.aperture', label: 'Aperture', value: c.lens.aperture, min: 1, max: 22, step: 0.1, hint: 'f-number' }),
     select({

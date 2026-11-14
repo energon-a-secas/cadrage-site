@@ -60,7 +60,6 @@ function toggle({ path, label, checked, hint = '' }) {
 export function quickEditPanel(config) {
   return panel({
     title: 'The setup being checked',
-    lead: 'Change anything here and every finding recalculates. A rule that survives its own input changing is not a rule.',
     body: `
       <div class="edit-grid">
         ${roomGroup(config)}

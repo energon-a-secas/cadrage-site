@@ -113,8 +113,7 @@ function headline(config) {
     title: 'Flicker, worked out',
     lead: `${escHtml(verdict)} ${basisChip('physics')}`,
     body: `
-      <div class="proof">${kvRows(rows)}</div>
-      <p class="proof__note">Change the mains frequency in the setup below and this recalculates. If it keeps the same verdict either way, it is not reading your config.</p>`,
+      <div class="proof">${kvRows(rows)}</div>`,
   });
 }
 

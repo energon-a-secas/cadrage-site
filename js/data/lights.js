@@ -66,7 +66,7 @@ export const ESTIMATES = {
 
 /**
  * A placeholder for the PL48's figure at 1 m until you measure yours.
- * Nobody publishes one. 800 is chosen so the "Today" layout below (three
+ * Nobody publishes one. 800 is chosen so the "Panels only" layout below (three
  * panels in front, about 1 m away) gives about the 2,000 lux that your
  * f/8, 1/100, ISO 800 exposure of 2026-10-24 implies, which is a
  * consistency check and not a measurement.
@@ -82,6 +82,7 @@ export const REFERENCE_LUX = luxForExposure(REFERENCE_EXPOSURE);
 
 const GODOX_SL60II = 'https://godox.com/product-a/SL60II.html';
 const GODOX_ML60II = 'https://godox.com/product-b/ML60IIBi.html';
+const GODOX_CATALOGUE = 'https://godox.com/Downloads/Godox_Continuous_Lighting_Catalogue_EN.pdf';
 const AMARAN_60DS = 'https://help.amarancreators.com/en/amaran-60ds/photometrics-technical-specifications';
 
 /**
@@ -148,12 +149,27 @@ export const LIGHTS = {
     },
     defaultMod: 'softbox-60',
     prices: [
-      { shop: 'godox', clp: 199990, note: 'suggested retail', url: 'https://godox.cl/producto/godox-sl60iibi-bi-color-led-luz-para-video/' },
-      { shop: 'mifotopro', clp: 199990, transfer: 191990, stock: '4 in stock', url: 'https://www.mifotopro.cl/producto/godox-sl60iibi-bi-color-led-luz-para-video-gd-sl60iibi/' },
+      { shop: 'godox', clp: 199990, note: 'suggested retail', checked: '2026-11-16', url: 'https://godox.cl/producto/godox-sl60iibi-bi-color-led-luz-para-video/' },
+      { shop: 'mifotopro', clp: 179990, transfer: 172790, stock: '2 in stock', checked: '2026-11-16', url: 'https://www.mifotopro.cl/producto/godox-sl60iibi-bi-color-led-luz-para-video-gd-sl60iibi/' },
       { shop: 'tripodes', clp: 203990, stock: 'stock on request', url: 'https://www.tripodes.cl/godox-sl60iibi-bi-color-led-video-light' },
       { shop: 'rincon', clp: 229900, transfer: 218405, stock: 'last unit', url: 'https://rinconfotografico.cl/godox-sl60iibi-luz-led-bicolor' },
       { shop: 'dj', clp: 229900, stock: 'coming soon', out: true, url: 'https://davidandjoseph.cl/index.php?route=product/product&path=353&product_id=57139' },
     ],
+  },
+  'godox-sl100d': {
+    label: 'Godox SL100D',
+    short: 'SL100D',
+    kind: '100 W daylight COB, Bowens mount, reflector in the box. Not the older SL100W, which Godox\'s current catalogue no longer lists and retailers rate CRI 93, TLCI 95',
+    colour: { cct: '5600 K', cri: 96, tlci: 97, atLeast: true },
+    src: 'Godox\'s continuous lighting catalogue (July 2026), read 2026-11-16',
+    url: GODOX_CATALOGUE,
+    mods: {
+      // Godox gives only the figure with its reflector at 1 m: no bare figure, so no softbox estimate either.
+      reflector: { label: 'With its reflector', areaCm2: 0, lux1m: 32100 },
+    },
+    defaultMod: 'reflector',
+    pricesNote: 'Mi Foto Pro lists it at CLP 229,990 (220,790 by bank transfer) in its Godox catalogue, as read on 2026-11-16; its product page could not be read, so stock is unconfirmed. No other Chilean shop that allows reading lists it.',
+    prices: [],
   },
   'godox-ml60ii-bi': {
     label: 'Godox ML60II Bi',
@@ -301,52 +317,60 @@ function sourceFigure(mod, light, panelLux1m) {
 // ── Layouts ──────────────────────────────────────────────────
 
 const pl48 = (role, distanceCm, mod = 'panel') => ({ preset: 'pl48', mod, role, distanceCm, output: 100, lux1m: null });
-const cob = (preset, mod, role, distanceCm) => ({ preset, mod, role, distanceCm, output: 100, lux1m: null });
+const cob = (preset, mod, role, distanceCm, output = 100) => ({ preset, mod, role, distanceCm, output, lux1m: null });
 
 /**
- * Starting layouts: where the panels stood on 2026-10-24, as a guess,
- * and the four ways up from there. `buy` lists what a tier adds, priced
- * from the tables above.
+ * Starting layouts: the panels of 2026-10-24 (the reference the PL48
+ * figure is tuned on), today's light as the 2026-11-14 exposure implies
+ * it, and the four ways up from today. `buy` lists what a tier adds,
+ * priced from the tables above.
  */
 export const SCENARIOS = [
   {
-    id: 'today',
-    label: 'Today',
-    blurb: 'Three PL48 panels from the front, about 1 m away. A guess at the 2026-10-24 layout: set your real distances.',
+    id: 'panels',
+    label: 'Panels only',
+    blurb: 'Three PL48 panels from the front, about 1 m away: a guess at the 2026-10-24 layout, the one the PL48 figure is tuned on.',
     buy: [],
     lights: [pl48('key', 100), pl48('fill', 100), pl48('front', 100)],
+  },
+  {
+    id: 'today',
+    label: 'Today',
+    blurb: 'The SL60IID on its reflector as the key, about 1.4 m away, and two PL48 panels at about 1 m as fill and rim: the 2026-11-14 layout as its exposure implies it (ISO 250 at f/8 and 1/100). The panels reach the model about 3.5 stops under the key. Set your real distances.',
+    buy: [],
+    lights: [cob('godox-sl60iid', 'reflector', 'key', 140), pl48('fill', 100), pl48('rim', 100)],
   },
   {
     id: 'free',
     label: 'Free',
     tier: true,
-    blurb: 'The same panels, each with a job: key closer, fill farther at about half, the third behind as a rim.',
+    blurb: 'The same lights, rebalanced: the SL60IID dimmed to 45%, the fill panel at 60 cm, the rim panel behind and above at 40 cm. The fill comes up from about 3.5 stops under the key to about 1, the rim to the key\'s level, and the exposure lands on ISO 400, the cleaner gain stage.',
     buy: [],
-    lights: [pl48('key', 42), pl48('fill', 62), pl48('rim', 70)],
+    lights: [cob('godox-sl60iid', 'reflector', 'key', 140, 45), pl48('fill', 60), pl48('rim', 40)],
   },
   {
     id: 'cheap',
-    label: 'Cheap',
+    label: 'Softbox',
     tier: true,
-    blurb: 'A 5-in-1 reflector\'s translucent disc held over the key panel, and the fill moved back to stay at half: smoother highlights on gloss, paid for with the stop the free layout gained.',
-    buy: [{ accessory: 'disc-5in1' }],
-    lights: [pl48('key', 42, 'diffused'), pl48('fill', 90), pl48('rim', 70)],
+    blurb: 'The SL60IID in a 60 x 60 softbox at 45 cm, the fill panel at 60 cm, the rim panel at 40 cm: soft highlights on gloss instead of the reflector\'s hot spots, paid for with about a stop and a half of light.',
+    buy: [{ accessory: 'softbox-60' }],
+    lights: [cob('godox-sl60iid', 'softbox-60', 'key', 45), pl48('fill', 60), pl48('rim', 40)],
   },
   {
     id: 'best-value',
-    label: 'Best value',
+    label: 'Second COB',
     tier: true,
-    blurb: 'One high-CRI COB as the key in a 60 x 60 softbox; the panels stay as fill and rim.',
-    buy: [{ light: 'godox-sl60iid' }, { accessory: 'softbox-60' }],
-    lights: [cob('godox-sl60iid', 'softbox-60', 'key', 45), pl48('fill', 62), pl48('rim', 70)],
+    blurb: 'A second COB behind and above as the rim, on its reflector at half power, with the SL60IID in the softbox as the key and one panel as fill: hard edges on a soft key, the look that reads as defined. The SL60IIBi, set to 5600 K, matches the SL60IID\'s colour and mount.',
+    buy: [{ light: 'godox-sl60iibi' }, { accessory: 'softbox-60' }],
+    lights: [cob('godox-sl60iid', 'softbox-60', 'key', 45), pl48('fill', 60), cob('godox-sl60iibi', 'reflector', 'rim', 120, 50)],
   },
   {
     id: 'more',
     label: 'More',
     tier: true,
-    blurb: 'Two COBs: the key in a 60 x 60 softbox, the fill in a 60 x 90, one panel as the rim. About the light of best value, with no green left in the shadows.',
-    buy: [{ light: 'godox-sl60iid' }, { accessory: 'softbox-60' }, { light: 'godox-sl60iid' }, { accessory: 'softbox-90' }],
-    lights: [cob('godox-sl60iid', 'softbox-60', 'key', 45), cob('godox-sl60iid', 'softbox-90', 'fill', 62), pl48('rim', 70)],
+    blurb: 'Two COBs in softboxes, the key in a 60 x 60 and the fill in a 60 x 90, one panel close as the rim: no green left in the key or the fill.',
+    buy: [{ light: 'godox-sl60iibi' }, { accessory: 'softbox-60' }, { accessory: 'softbox-90' }],
+    lights: [cob('godox-sl60iid', 'softbox-60', 'key', 45), cob('godox-sl60iibi', 'softbox-90', 'fill', 70), pl48('rim', 40)],
   },
 ];
 

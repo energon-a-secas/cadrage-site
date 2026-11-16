@@ -403,11 +403,19 @@ for (const r of SONY_RECORD_TIMES) {
     const lights = SCENARIO_BY_ID[id].lights.map(l => resolve(l));
     return exposureFromLux({ lux: lightMix(lights).onCard, aperture: 8, iso: 400, shutterDenom: 100 });
   };
-  ok('today\'s guess reproduces the ISO 800 of 2026-10-24', iso('today').isoDial, 800);
-  near('...within a tenth of a stop of the 2,000 lux', Math.log2(iso('today').lux / REFERENCE_LUX), 0, 0.1);
-  ok('the free tier reaches ISO 400 at f/8', iso('free').isoDial, 400);
-  ok('diffusion spends the stop that moving closer gained', [iso('cheap').isoDial, iso('free').isoDial], [800, 400]);
-  ok('one COB in a softbox reaches ISO 400 too, by the softbox estimate', iso('best-value').isoDial, 400);
+  ok('the panels-only guess reproduces the ISO 800 of 2026-10-24', iso('panels').isoDial, 800);
+  near('...within a tenth of a stop of the 2,000 lux', Math.log2(iso('panels').lux / REFERENCE_LUX), 0, 0.1);
+  ok('today reproduces the ISO 250 of 2026-11-14', iso('today').isoDial, 250);
+  const ratio = (id, role) => {
+    const mix = lightMix(SCENARIO_BY_ID[id].lights.map(l => resolve(l)));
+    return Math.log2(mix.byRole.key / mix.byRole[role]);
+  };
+  ok('today the panels reach the model 3 to 4 stops under the key', ratio('today', 'fill') > 3 && ratio('today', 'fill') < 4, true);
+  ok('the free tier brings the fill to within about a stop', ratio('free', 'fill') > 0.5 && ratio('free', 'fill') < 1.3, true);
+  ok('...and the rim to the key\'s level', Math.abs(ratio('free', 'rim')) < 0.5, true);
+  ok('...and lands on ISO 400, the cleaner gain stage', iso('free').isoDial, 400);
+  ok('the softbox spends about a stop and a half of light', iso('cheap').isoDial >= 400 && iso('cheap').isoDial <= 640, true);
+  ok('a second COB as the rim reaches the model above the key', ratio('best-value', 'rim') < 0, true);
 
   for (const [id, l] of Object.entries(LIGHTS)) {
     ok(`${id}: its default mod exists`, !!l.mods[l.defaultMod], true);
@@ -430,8 +438,9 @@ for (const r of SONY_RECORD_TIMES) {
     }
     if (sc.buy.length) ok(`${sc.id}: costs add up from the price lists`, tierCost(sc) > 0, true);
   }
-  ok('best value is the COB plus its softbox', tierCost(SCENARIO_BY_ID['best-value']),
-    lowestPrice(LIGHTS['godox-sl60iid'].prices) + lowestPrice(ACCESSORIES['softbox-60'].prices));
+  ok('the second COB tier is the SL60IIBi plus the softbox', tierCost(SCENARIO_BY_ID['best-value']),
+    lowestPrice(LIGHTS['godox-sl60iibi'].prices) + lowestPrice(ACCESSORIES['softbox-60'].prices));
+  ok('the SL100D is in the list with Godox\'s own figure', LIGHTS['godox-sl100d'].mods.reflector.lux1m, 32100);
   ok('tier costs skip a price that cannot be bought or was not re-checked',
     lowestPrice([{ clp: 100, out: true }, { clp: 200, seen: true }, { clp: 300 }]), 300);
   ok('a price list with nothing to buy today has no cost', lowestPrice([{ clp: 100, out: true }]), null);
